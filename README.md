@@ -238,4 +238,4 @@ Built with these excellent open-source projects:
 - [html-to-docx](https://github.com/privateOmega/html-to-docx) — HTML to Word, no Pandoc
 - [VS Code Codicons](https://github.com/microsoft/vscode-codicons) — the icon set used in the UI
 
-Thanks to the VS Code extension community for documentation and inspiration.
+Thanks to the VS Code extension community for the guidance and inspiration.
