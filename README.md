@@ -1,8 +1,8 @@
-![Version](https://img.shields.io/visual-studio-marketplace/v/AnandSundaramoorthySa.markdown-to-pdf-word)
-![Installs](https://img.shields.io/visual-studio-marketplace/i/AnandSundaramoorthySa.markdown-to-pdf-word)
-![Rating](https://img.shields.io/visual-studio-marketplace/r/AnandSundaramoorthySa.markdown-to-pdf-word)
-![License](https://img.shields.io/github/license/anandsundaramoorthysa/markdown-to-pdf-word)
-![VS Code](https://img.shields.io/static/v1?label=VS%20Code&message=%5E1.85.0&color=blue)
+[![VS Marketplace](https://img.shields.io/badge/VS%20Marketplace-Markdown%20to%20PDF%20%26%20Word-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
+[![Version](https://img.shields.io/visual-studio-marketplace/v/AnandSundaramoorthySa.markdown-to-pdf-word?label=version&color=007ACC)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
+[![Installs](https://img.shields.io/visual-studio-marketplace/i/AnandSundaramoorthySa.markdown-to-pdf-word?label=installs&color=success)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-007ACC?logo=visualstudiocode&logoColor=white)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contribution)
 
 # Markdown to PDF & Word
