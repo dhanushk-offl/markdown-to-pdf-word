@@ -1,6 +1,6 @@
-![Version](https://img.shields.io/visual-studio-marketplace/v/anandsundaramoorthy.markdown-to-pdf-word)
-![Installs](https://img.shields.io/visual-studio-marketplace/i/anandsundaramoorthy.markdown-to-pdf-word)
-![Rating](https://img.shields.io/visual-studio-marketplace/r/anandsundaramoorthy.markdown-to-pdf-word)
+![Version](https://img.shields.io/visual-studio-marketplace/v/AnandSundaramoorthySa.markdown-to-pdf-word)
+![Installs](https://img.shields.io/visual-studio-marketplace/i/AnandSundaramoorthySa.markdown-to-pdf-word)
+![Rating](https://img.shields.io/visual-studio-marketplace/r/AnandSundaramoorthySa.markdown-to-pdf-word)
 ![License](https://img.shields.io/github/license/anandsundaramoorthysa/markdown-to-pdf-word)
 ![VS Code](https://img.shields.io/static/v1?label=VS%20Code&message=%5E1.85.0&color=blue)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contribution)
@@ -87,7 +87,7 @@ Most existing tools do **one** piece of this. None combine them:
 Or install from the command line:
 
 ```bash
-code --install-extension anandsundaramoorthy.markdown-to-pdf-word
+code --install-extension AnandSundaramoorthySa.markdown-to-pdf-word
 ```
 
 ### From a `.vsix` file
