@@ -1,0 +1,33 @@
+# Source & build config (we ship compiled out/ only)
+.vscode/**
+src/**
+sample/**
+tsconfig.json
+**/*.ts
+**/*.map
+
+# Docs / planning not needed in the package
+PLAN.md
+.gitignore
+
+# Test artifacts and scratch/log files (must never ship)
+test-output/**
+*.vsix
+*.log
+PKG.txt
+STATUS.txt
+FINAL.txt
+LEAK.txt
+VERIFY.txt
+verify.txt
+vsixreport.txt
+testreport.txt
+result.json
+toc.json
+install.txt
+installed.txt
+rootlist.txt
+lsfiles.txt
+CHECK.txt
+*.bak
+*.bak*

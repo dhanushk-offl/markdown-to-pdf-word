@@ -1,0 +1,160 @@
+{
+  "name": "markdown-to-pdf-word",
+  "displayName": "Markdown to PDF & Word",
+  "description": "Turn Markdown into a clean, professional PDF, Word, or HTML document - no Pandoc, no setup. Removes AI clutter, adds a cover page and branding.",
+  "version": "1.0.0",
+  "publisher": "your-publisher-id",
+  "author": {
+    "name": "Anand Sundaramoorthy"
+  },
+  "license": "MIT",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anandsundaramoorthysa/markdown-to-pdf-word.git"
+  },
+  "bugs": {
+    "url": "https://github.com/anandsundaramoorthysa/markdown-to-pdf-word/issues"
+  },
+  "homepage": "https://github.com/anandsundaramoorthysa/markdown-to-pdf-word#readme",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Formatters",
+    "Other"
+  ],
+  "keywords": [
+    "markdown",
+    "md",
+    "pdf",
+    "word",
+    "docx",
+    "html",
+    "export",
+    "convert",
+    "document",
+    "professional",
+    "cleanup"
+  ],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "markready.openStudio",
+        "title": "MarkReady: Open Customization Studio"
+      },
+      {
+        "command": "markready.exportPdf",
+        "title": "MarkReady: Export as PDF"
+      },
+      {
+        "command": "markready.exportDocx",
+        "title": "MarkReady: Export as Word (DOCX)"
+      },
+      {
+        "command": "markready.exportHtml",
+        "title": "MarkReady: Export as HTML"
+      },
+      {
+        "command": "markready.cleanToNewFile",
+        "title": "MarkReady: Clean Markdown (preview cleaned copy)"
+      },
+      {
+        "command": "markready.exportFolder",
+        "title": "MarkReady: Gather Folder into One Document"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markready.openStudio",
+          "group": "markready@1"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markready.exportPdf",
+          "group": "markready@2"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markready.exportDocx",
+          "group": "markready@3"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markready.openStudio",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "when": "explorerResourceIsFolder",
+          "command": "markready.exportFolder",
+          "group": "markready@1"
+        },
+        {
+          "when": "resourceLangId == markdown",
+          "command": "markready.openStudio",
+          "group": "markready@1"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "MarkReady",
+      "properties": {
+        "markready.defaultProfile": {
+          "type": "string",
+          "default": "HR Formal",
+          "description": "The document profile used by quick export commands."
+        },
+        "markready.cleanup.removeChatter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Remove AI chatty intros/outros (e.g. 'Certainly! Here's...', 'Let me know if...')."
+        },
+        "markready.cleanup.removeEmoji": {
+          "type": "boolean",
+          "default": true,
+          "description": "Strip emoji from headings and text."
+        },
+        "markready.cleanup.normalizeHeadings": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ensure consistent heading spacing."
+        },
+        "markready.cleanup.normalizeWhitespace": {
+          "type": "boolean",
+          "default": true,
+          "description": "Collapse excessive blank lines and trailing whitespace."
+        },
+        "markready.cleanup.normalizePunctuation": {
+          "type": "boolean",
+          "default": true,
+          "description": "Convert smart quotes/dashes/ellipses to plain ASCII."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.45",
+    "html-to-docx": "^1.8.0",
+    "markdown-it": "^14.1.0",
+    "puppeteer": "^23.11.1"
+  },
+  "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.5.4"
+  }
+}

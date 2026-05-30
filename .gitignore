@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Compiled output
+out/
+dist/
+
+# Packaged extension
+*.vsix
+
+# Logs
+*.log
+npm-debug.log*
+
+# VS Code test runner
+.vscode-test/
+
+# Test / scratch artifacts
+test-output/
+CHECK.txt
+STATUS.txt
+PKG.txt
+FINAL.txt
+LEAK.txt
+VERIFY.txt
+verify.txt
+vsixreport.txt
+testreport.txt
+result.json
+toc.json
+lsfiles.txt
+installed.txt
+rootlist.txt
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+*.bak
