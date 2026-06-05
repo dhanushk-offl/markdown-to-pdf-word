@@ -1,9 +1,9 @@
-[![VS Marketplace](https://img.shields.io/badge/VS%20Marketplace-Markdown%20to%20PDF%20%26%20Word-007ACC?logo=visualstudiocode&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
-[![Version](https://img.shields.io/visual-studio-marketplace/v/AnandSundaramoorthySa.markdown-to-pdf-word?label=version&color=007ACC)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
-[![Installs](https://img.shields.io/visual-studio-marketplace/i/AnandSundaramoorthySa.markdown-to-pdf-word?label=installs&color=success)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-007ACC?logo=visualstudiocode&logoColor=white)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](#contribution)
+[![Marketplace Version](https://vsmarketplacebadges.dev/version-short/AnandSundaramoorthySa.markdown-to-pdf-word.svg?style=flat-square&label=Marketplace&color=007ACC)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
+[![Installs](https://vsmarketplacebadges.dev/installs-short/AnandSundaramoorthySa.markdown-to-pdf-word.svg?style=flat-square&label=Installs&color=4c1)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
+[![Downloads](https://vsmarketplacebadges.dev/downloads-short/AnandSundaramoorthySa.markdown-to-pdf-word.svg?style=flat-square&label=Downloads&color=4c1)](https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word)
+[![VS Code](https://img.shields.io/badge/VS%20Code-%5E1.85.0-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white)](https://code.visualstudio.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square)](#contribution)
 
 # Markdown to PDF & Word
 
@@ -95,7 +95,7 @@ code --install-extension AnandSundaramoorthySa.markdown-to-pdf-word
 Download the `.vsix` from the [Releases](https://github.com/anandsundaramoorthysa/markdown-to-pdf-word/releases) page, then:
 
 ```bash
-code --install-extension markdown-to-pdf-word-1.0.0.vsix
+code --install-extension markdown-to-pdf-word-1.1.0.vsix
 ```
 
 > **Note:** PDF export uses Chromium. The extension uses its bundled engine, and if that is
@@ -105,7 +105,7 @@ code --install-extension markdown-to-pdf-word-1.0.0.vsix
 ## Usage
 
 1. Open any Markdown (`.md`) file.
-2. Press `Ctrl+Shift+P` and run **MarkReady: Open Customization Studio**.
+2. Press `Ctrl+Shift+P` and run **Markdown to PDF & Word: Open Customization Studio**.
 3. Adjust the cover page, colors, fonts, and layout — watch the live preview update.
 4. Click **Export PDF**, **Export Word**, or **Export HTML**.
 
@@ -117,12 +117,12 @@ Open the Command Palette (`Ctrl+Shift+P`):
 
 | Command | Description |
 |---|---|
-| `MarkReady: Open Customization Studio` | Visual editor + live preview + export buttons |
-| `MarkReady: Export as PDF` | Clean + render the active file to PDF |
-| `MarkReady: Export as Word (DOCX)` | Clean + render the active file to Word (no Pandoc) |
-| `MarkReady: Export as HTML` | Clean + render the active file to HTML |
-| `MarkReady: Clean Markdown` | Open a cleaned copy of the active file |
-| `MarkReady: Gather Folder into One Document` | Combine all `.md` in a folder into one document |
+| `Markdown to PDF & Word: Open Customization Studio` | Visual editor + live preview + export buttons |
+| `Markdown to PDF & Word: Export as PDF` | Clean + render the active file to PDF |
+| `Markdown to PDF & Word: Export as Word (DOCX)` | Clean + render the active file to Word (no Pandoc) |
+| `Markdown to PDF & Word: Export as HTML` | Clean + render the active file to HTML |
+| `Markdown to PDF & Word: Clean Markdown` | Open a cleaned copy of the active file |
+| `Markdown to PDF & Word: Gather Folder into One Document` | Combine all `.md` in a folder into one document |
 
 ## Settings
 

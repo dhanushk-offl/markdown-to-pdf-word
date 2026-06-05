@@ -1,5 +1,5 @@
 /**
- * MarkReady - entry point. Registers commands and wires the cleanup -> render -> export pipeline.
+ * Markdown to PDF & Word - entry point. Registers commands and wires the cleanup -> render -> export pipeline.
  */
 
 import * as vscode from "vscode";
@@ -57,7 +57,7 @@ async function pickProfile(root: string | undefined): Promise<DocProfile | undef
     profile: p,
   }));
   const pick = await vscode.window.showQuickPick(items, {
-    title: "MarkReady: choose a document profile",
+    title: "Markdown to PDF & Word: choose a document profile",
     placeHolder: "Pick the look for your document",
   });
   return pick?.profile;
@@ -66,7 +66,7 @@ async function pickProfile(root: string | undefined): Promise<DocProfile | undef
 async function quickExport(format: Format) {
   const md = activeMarkdown();
   if (!md) {
-    vscode.window.showWarningMessage("MarkReady: open a markdown (.md) file first.");
+    vscode.window.showWarningMessage("Markdown to PDF & Word: open a markdown (.md) file first.");
     return;
   }
   const root = wsRoot(md.fsPath ? vscode.Uri.file(md.fsPath) : undefined);
@@ -85,7 +85,7 @@ async function quickExport(format: Format) {
 async function cleanToNewFile() {
   const md = activeMarkdown();
   if (!md) {
-    vscode.window.showWarningMessage("MarkReady: open a markdown (.md) file first.");
+    vscode.window.showWarningMessage("Markdown to PDF & Word: open a markdown (.md) file first.");
     return;
   }
   const cleaned = cleanMarkdown(md.text, getCleanup());
@@ -124,7 +124,7 @@ async function exportFolder(uri?: vscode.Uri) {
 
   const files = gatherFiles(folder);
   if (!files.length) {
-    vscode.window.showWarningMessage("MarkReady: no .md files found in that folder.");
+    vscode.window.showWarningMessage("Markdown to PDF & Word: no .md files found in that folder.");
     return;
   }
 
@@ -169,7 +169,7 @@ Certainly! Here's a quick sample so you can see the live preview.
 
 ## Overview
 
-This document shows how **MarkReady** renders a clean, branded document from markdown.
+This document shows how **Markdown to PDF & Word** renders a clean, branded document from markdown.
 
 - Bullet one
 - Bullet two with \`inline code\`

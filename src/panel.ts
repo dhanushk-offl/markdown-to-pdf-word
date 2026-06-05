@@ -50,7 +50,7 @@ export class StudioPanel {
     }
     const panel = vscode.window.createWebviewPanel(
       StudioPanel.viewType,
-      "MarkReady Studio",
+      "Markdown to PDF & Word Studio",
       column,
       {
         enableScripts: true,
@@ -61,6 +61,7 @@ export class StudioPanel {
         ],
       }
     );
+    panel.iconPath = vscode.Uri.joinPath(context.extensionUri, "media", "icon.png");
     StudioPanel.current = new StudioPanel(panel, init, context.extensionUri);
   }
 
@@ -201,7 +202,7 @@ export class StudioPanel {
           this.baseDir = fsPath ? path.dirname(fsPath) : this.baseDir;
           this.post({ type: "source", filename: this.filename });
           this.renderPreview();
-          vscode.window.showInformationMessage(`MarkReady: loaded "${this.filename}".`);
+          vscode.window.showInformationMessage(`Markdown to PDF & Word: loaded "${this.filename}".`);
         } else {
           vscode.window.showWarningMessage("Focus a markdown editor, then click Refresh.");
         }
@@ -259,6 +260,11 @@ export class StudioPanel {
     background: var(--vscode-input-background); color: var(--vscode-input-foreground);
     border: 1px solid var(--vscode-input-border, #888); border-radius:4px; padding:4px 6px; width:100%;
   }
+  input[type=date] {
+    background: var(--vscode-input-background); color: var(--vscode-input-foreground);
+    border: 1px solid var(--vscode-input-border, #888); border-radius:4px; padding:4px 6px;
+    width:auto; color-scheme: light dark;
+  }
   button {
     background: var(--vscode-button-background); color: var(--vscode-button-foreground);
     border:none; border-radius:4px; padding:6px 10px; cursor:pointer;
@@ -270,8 +276,15 @@ export class StudioPanel {
   button:hover { opacity:.9; }
   .main { flex:1; display:flex; min-height:0; }
   .form { width:340px; overflow:auto; padding:12px; border-right:1px solid var(--vscode-panel-border); }
+  .form.collapsed { display:none; }
   .preview { flex:1; background:#fff; }
   iframe { width:100%; height:100%; border:0; background:#fff; }
+
+  /* Fullscreen preview: the preview covers the whole webview, toolbar + form hidden. */
+  body.preview-full .toolbar, body.preview-full .form { display:none; }
+  body.preview-full .preview { position:fixed; inset:0; z-index:100; }
+  #exitFsBtn { position:fixed; top:10px; right:10px; z-index:101; display:none; box-shadow:0 1px 6px rgba(0,0,0,.3); }
+  body.preview-full #exitFsBtn { display:inline-flex; }
   fieldset { border:1px solid var(--vscode-panel-border); border-radius:6px; margin:0 0 12px; padding:8px 10px; }
   legend { font-weight:600; padding:0 4px; }
   label { display:block; font-size:11px; opacity:.85; margin:8px 0 2px; }
@@ -286,7 +299,9 @@ export class StudioPanel {
 </head>
 <body>
   <div class="toolbar">
-    <span class="title"><i class="codicon codicon-paintcan"></i>MarkReady Studio</span>
+    <span class="title" title="Markdown to PDF & Word Studio"><i class="codicon codicon-files"></i></span>
+    <button class="secondary" id="toggleSidebarBtn" title="Hide sidebar"><i class="codicon codicon-layout-sidebar-left"></i></button>
+    <button class="secondary" id="fullscreenBtn" title="Fullscreen preview"><i class="codicon codicon-screen-full"></i></button>
     <label style="margin:0;">Profile:</label>
     <select id="profileSelect" style="width:auto;min-width:140px"></select>
     <button class="secondary" id="saveBtn" title="Save this profile to .markready/profiles"><i class="codicon codicon-save"></i>Save Profile</button>
@@ -296,6 +311,7 @@ export class StudioPanel {
     <button id="docxBtn"><i class="codicon codicon-file"></i>Export Word</button>
     <button class="secondary" id="htmlBtn"><i class="codicon codicon-file-code"></i>Export HTML</button>
   </div>
+  <button class="secondary" id="exitFsBtn" title="Exit fullscreen (Esc)"><i class="codicon codicon-screen-normal"></i>Exit fullscreen</button>
   <div class="main">
     <div class="form">
       <fieldset>
@@ -313,7 +329,11 @@ export class StudioPanel {
           <div><label>Author</label><input type="text" id="coverAuthor"/></div>
           <div><label>Company</label><input type="text" id="coverCompany"/></div>
         </div>
-        <label>Date</label><input type="text" id="coverDate"/>
+        <label>Date</label>
+        <div class="row">
+          <div><input type="text" id="coverDate" placeholder="{{today}} or any text"/></div>
+          <input type="date" id="coverDatePick" title="Pick a specific date"/>
+        </div>
         <label>Logo</label>
         <div class="row">
           <div><input type="text" id="coverLogo" placeholder="path/to/logo.png"/></div>
@@ -449,6 +469,36 @@ export class StudioPanel {
   $("pdfBtn").addEventListener("click", () => vscode.postMessage({ type: "export", format: "pdf", profile: readForm() }));
   $("docxBtn").addEventListener("click", () => vscode.postMessage({ type: "export", format: "docx", profile: readForm() }));
   $("htmlBtn").addEventListener("click", () => vscode.postMessage({ type: "export", format: "html", profile: readForm() }));
+
+  // Date picker: writes a formatted date into the free-text Date field (which still
+  // accepts {{today}} or any text). Parse parts manually to avoid UTC off-by-one.
+  $("coverDatePick").addEventListener("change", (e) => {
+    const v = e.target.value; // YYYY-MM-DD
+    if (!v) return;
+    const [y, m, d] = v.split("-").map(Number);
+    const dt = new Date(y, m - 1, d);
+    $("coverDate").value = dt.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    pushChange();
+  });
+
+  // Hide/show the sidebar to give the preview the full panel width.
+  $("toggleSidebarBtn").addEventListener("click", () => {
+    const hidden = document.querySelector(".form").classList.toggle("collapsed");
+    const btn = $("toggleSidebarBtn");
+    btn.title = hidden ? "Show sidebar" : "Hide sidebar";
+    btn.querySelector("i").className = "codicon codicon-layout-sidebar-left" + (hidden ? "-off" : "");
+  });
+
+  // Fullscreen preview: cover the whole webview so page layout is easy to see.
+  function setFullscreen(on) {
+    document.body.classList.toggle("preview-full", on);
+    const i = $("fullscreenBtn").querySelector("i");
+    i.className = on ? "codicon codicon-screen-normal" : "codicon codicon-screen-full";
+    $("fullscreenBtn").title = on ? "Exit fullscreen" : "Fullscreen preview";
+  }
+  $("fullscreenBtn").addEventListener("click", () => setFullscreen(!document.body.classList.contains("preview-full")));
+  $("exitFsBtn").addEventListener("click", () => setFullscreen(false));
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setFullscreen(false); });
 
   window.addEventListener("message", (event) => {
     const m = event.data;

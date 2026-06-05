@@ -49,7 +49,7 @@ export class GatherPanel {
     }
     const panel = vscode.window.createWebviewPanel(
       GatherPanel.viewType,
-      "MarkReady — Gather Folder",
+      "Markdown to PDF & Word — Gather Folder",
       column,
       {
         enableScripts: true,
@@ -59,6 +59,7 @@ export class GatherPanel {
         ],
       }
     );
+    panel.iconPath = vscode.Uri.joinPath(context.extensionUri, "media", "icon.png");
     GatherPanel.current = new GatherPanel(panel, init, context.extensionUri);
   }
 
@@ -112,7 +113,7 @@ export class GatherPanel {
         .map((rel) => this.byRel.get(rel))
         .filter((f): f is GatheredFile => !!f);
       if (!ordered.length) {
-        vscode.window.showWarningMessage("MarkReady: select at least one file to include.");
+        vscode.window.showWarningMessage("Markdown to PDF & Word: select at least one file to include.");
         return;
       }
 

@@ -10,6 +10,11 @@ tsconfig.json
 PLAN.md
 .gitignore
 
+# Local agent / tooling workspace (must never ship)
+.claude/**
+.env
+.env.*
+
 # Test artifacts and scratch/log files (must never ship)
 test-output/**
 *.vsix

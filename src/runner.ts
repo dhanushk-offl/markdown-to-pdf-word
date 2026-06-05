@@ -51,7 +51,7 @@ export async function runExport(params: {
     await vscode.window.withProgress(
       {
         location: vscode.ProgressLocation.Notification,
-        title: `MarkReady: exporting ${format.toUpperCase()}…`,
+        title: `Markdown to PDF & Word: exporting ${format.toUpperCase()}…`,
       },
       async () => {
         if (format === "pdf") {
@@ -67,7 +67,7 @@ export async function runExport(params: {
       }
     );
   } catch (err: any) {
-    vscode.window.showErrorMessage(`MarkReady export failed: ${err?.message ?? err}`);
+    vscode.window.showErrorMessage(`Markdown to PDF & Word export failed: ${err?.message ?? err}`);
     return;
   }
 

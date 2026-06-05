@@ -2,7 +2,7 @@
   "name": "markdown-to-pdf-word",
   "displayName": "Markdown to PDF & Word",
   "description": "Turn Markdown into a clean, professional PDF, Word, or HTML document - no Pandoc, no setup. Removes AI clutter, adds a cover page and branding.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "AnandSundaramoorthySa",
   "author": {
     "name": "Anand Sundaramoorthy"
@@ -43,27 +43,27 @@
     "commands": [
       {
         "command": "markready.openStudio",
-        "title": "MarkReady: Open Customization Studio"
+        "title": "Markdown to PDF & Word: Open Customization Studio"
       },
       {
         "command": "markready.exportPdf",
-        "title": "MarkReady: Export as PDF"
+        "title": "Markdown to PDF & Word: Export as PDF"
       },
       {
         "command": "markready.exportDocx",
-        "title": "MarkReady: Export as Word (DOCX)"
+        "title": "Markdown to PDF & Word: Export as Word (DOCX)"
       },
       {
         "command": "markready.exportHtml",
-        "title": "MarkReady: Export as HTML"
+        "title": "Markdown to PDF & Word: Export as HTML"
       },
       {
         "command": "markready.cleanToNewFile",
-        "title": "MarkReady: Clean Markdown (preview cleaned copy)"
+        "title": "Markdown to PDF & Word: Clean Markdown (preview cleaned copy)"
       },
       {
         "command": "markready.exportFolder",
-        "title": "MarkReady: Gather Folder into One Document"
+        "title": "Markdown to PDF & Word: Gather Folder into One Document"
       }
     ],
     "menus": {
@@ -105,7 +105,7 @@
       ]
     },
     "configuration": {
-      "title": "MarkReady",
+      "title": "Markdown to PDF & Word",
       "properties": {
         "markready.defaultProfile": {
           "type": "string",
