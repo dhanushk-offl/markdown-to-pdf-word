@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.1
+
+- **Preview proportions fixed**: the live preview sheet now uses the real page geometry in
+  pixels, so it shows **true A4/Letter/Legal proportions** (portrait/landscape) instead of a
+  stretched strip. The cover fills exactly one page, the sheet rounds to whole pages, and a
+  faint **page-break guide line** marks each page — so the preview matches the exported PDF.
+- Housekeeping: refreshed `.gitignore` / `.vscodeignore` (coverage, caches, `.history`,
+  `*.tgz`, build info) and trimmed dependency cruft from the packaged VSIX.
+
 ## 1.2.0
 
 ### PDF engine
@@ -21,7 +30,7 @@
 
 ### Studio
 - **Page-accurate preview**: the live preview renders a real paper sheet sized to the chosen
-  page size and orientation, with margins and representative header/footer bands.
+  page size and orientation, with margins and representative header/footer bands. (Refined in 1.2.1.)
 - **Zoom** controls (in/out/fit-to-width) and a **draggable splitter** between form and preview.
 - **Profile management**: New, Duplicate, Delete, Reset-to-preset, Import and Export JSON.
 - **Inline cleanup toggles** in the panel (per preview/export), plus font suggestions, color

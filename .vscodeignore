@@ -42,7 +42,9 @@ node_modules/**/*.flow
 
 # Test artifacts and scratch/log files (must never ship)
 test-output/**
+.history/**
 *.vsix
+*.tgz
 *.log
 PKG.txt
 STATUS.txt

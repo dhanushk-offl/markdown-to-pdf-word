@@ -747,21 +747,24 @@ export class StudioPanel {
     window.addEventListener("mouseup", () => { if (dragging){ dragging=false; document.body.style.userSelect=""; saveUi(); } });
   })();
 
-  // ---- Page sizing / zoom ----
-  function pageWidthPx() {
+  // ---- Page sizing / zoom (matches render.ts page geometry) ----
+  function pageDimsPx() {
     const dims = { A4:[794,1123], Letter:[816,1056], Legal:[816,1344] };
-    const size = $("pageSize").value || "A4";
-    let [w] = dims[size] || dims.A4;
-    let h = (dims[size] || dims.A4)[1];
+    let [w,h] = dims[$("pageSize").value] || dims.A4;
     if (($("orientation").value || "portrait") === "landscape") { const t=w; w=h; h=t; }
-    return w;
+    return { w, h };
   }
   function sizePage() {
     const ifr = $("preview");
-    ifr.style.width = pageWidthPx() + "px";
+    const { w, h } = pageDimsPx();
+    ifr.style.width = w + "px";
     try {
       const doc = ifr.contentDocument;
-      if (doc && doc.body) ifr.style.height = doc.documentElement.scrollHeight + "px";
+      if (doc && doc.body) {
+        const sh = doc.documentElement.scrollHeight;
+        const pages = Math.max(1, Math.ceil((sh - 2) / h)); // round up to whole pages
+        ifr.style.height = (pages * h) + "px";
+      }
     } catch (e) {}
     ifr.style.zoom = ui.zoom;
     $("zoomLabel").textContent = Math.round(ui.zoom*100) + "%";
@@ -771,7 +774,7 @@ export class StudioPanel {
   $("zoomOutBtn").addEventListener("click", () => setZoom(ui.zoom - 0.1));
   $("fitBtn").addEventListener("click", () => {
     const deskW = document.querySelector(".desk").clientWidth - 40;
-    setZoom(deskW / pageWidthPx());
+    setZoom(deskW / pageDimsPx().w);
   });
 
   $("preview").addEventListener("load", () => {

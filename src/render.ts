@@ -17,6 +17,27 @@ const matter = require("gray-matter");
 
 const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
+/** Page pixel dimensions at 96dpi, accounting for orientation. */
+export function pageDimsPx(p: DocProfile): { w: number; h: number } {
+  const base: Record<string, [number, number]> = { A4: [794, 1123], Letter: [816, 1056], Legal: [816, 1344] };
+  let [w, h] = base[p.layout.pageSize] || base.A4;
+  if (p.layout.orientation === "landscape") {
+    const t = w;
+    w = h;
+    h = t;
+  }
+  return { w, h };
+}
+
+/** Convert a CSS length (cm/mm/in/pt/px) to pixels at 96dpi. */
+export function cssLenToPx(v: string): number {
+  const m = String(v || "").trim().match(/^([\d.]+)\s*(cm|mm|in|pt|px)?$/i);
+  if (!m) return 38;
+  const n = parseFloat(m[1]);
+  const factor: Record<string, number> = { cm: 37.7952755906, mm: 3.7795275591, in: 96, pt: 1.3333333, px: 1 };
+  return n * (factor[(m[2] || "px").toLowerCase()] || 1);
+}
+
 /** Syntax-highlight a fenced code block with highlight.js (returns a full <pre>). */
 function highlight(str: string, lang: string): string {
   if (lang && hljs.getLanguage(lang)) {
@@ -413,7 +434,22 @@ export function buildHtml(opts: BuildOptions): string {
   let headerBand = "";
   let footerBand = "";
   if (previewMode) {
-    previewCss = `.mr-page { padding: ${p.layout.margin}; }
+    // Use the real page geometry (in px) so the preview sheet has the exact A4/
+    // Letter/Legal proportions, and the cover fills exactly one page (its 92vh
+    // would otherwise resolve against the auto-height iframe and stretch the sheet).
+    const { h: pageH } = pageDimsPx(p);
+    const mpx = cssLenToPx(p.layout.margin);
+    const contentH = Math.max(200, Math.round(pageH - 2 * mpx));
+    previewCss = `html { height:100%; background:#fff; }
+      body { min-height:100%; background:#fff; }
+      .mr-page { padding: ${p.layout.margin}; position:relative; min-height:${contentH}px; }
+      .mr-cover { min-height:${contentH}px !important; }
+      /* faint guide line at each page boundary */
+      body {
+        background-image: repeating-linear-gradient(to bottom,
+          transparent 0, transparent ${pageH - 1}px,
+          rgba(0,0,0,.16) ${pageH - 1}px, rgba(0,0,0,.16) ${pageH}px);
+      }
       .mr-pv-header, .mr-pv-footer { color:#888; font-size:9px; padding:6px 0;
         display:flex; justify-content:space-between; }
       .mr-pv-header { border-bottom:1px solid #eee; margin-bottom:8px; }
