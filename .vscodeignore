@@ -10,8 +10,9 @@ tsconfig.json
 PLAN.md
 .gitignore
 
-# Local agent / tooling workspace (must never ship)
+# Local agent / tooling workspace (must never ship) - root and any nested in deps
 .claude/**
+**/.claude/**
 .env
 .env.*
 
