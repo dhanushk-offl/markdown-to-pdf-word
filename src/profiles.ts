@@ -35,6 +35,11 @@ export interface DocProfile {
   };
   options: {
     toc: boolean; // insert a Table of Contents built from headings
+    tocDepth?: number; // deepest heading level shown in the TOC (1-6, default 3)
+    headingNumbers?: boolean; // prefix headings with 1, 1.1, 1.1.2 numbering
+    codeTheme?: string; // highlight.js theme name (e.g. "github", "github-dark")
+    math?: boolean; // render $...$ / $$...$$ math with KaTeX
+    watermark?: string; // optional diagonal watermark text on every page
   };
 }
 
@@ -155,7 +160,16 @@ export function normalizeProfile(raw: any): DocProfile {
     header: { ...base.header, ...(raw.header || {}) },
     footer: { ...base.footer, ...(raw.footer || {}) },
     layout: { ...base.layout, ...(raw.layout || {}) },
-    options: { ...base.options, ...(raw.options || {}) },
+    options: {
+      toc: false,
+      tocDepth: 3,
+      headingNumbers: false,
+      codeTheme: "github",
+      math: false,
+      watermark: "",
+      ...base.options,
+      ...(raw.options || {}),
+    },
   };
 }
 
@@ -202,4 +216,24 @@ export function saveProfile(workspaceRoot: string, profile: DocProfile): string 
   const file = path.join(dir, slugify(profile.name) + ".json");
   fs.writeFileSync(file, JSON.stringify(profile, null, 2), "utf8");
   return file;
+}
+
+/** The built-in preset with this name, if any (used by "Reset to preset"). */
+export function builtinProfile(name: string): DocProfile | undefined {
+  const found = BUILTIN_PROFILES.find((p) => p.name === name);
+  return found ? cloneProfile(found) : undefined;
+}
+
+/** Delete a saved profile file from the workspace. Returns true if a file was removed. */
+export function deleteProfile(workspaceRoot: string, name: string): boolean {
+  try {
+    const file = path.join(workspaceRoot, PROFILES_DIR, slugify(name) + ".json");
+    if (fs.existsSync(file)) {
+      fs.unlinkSync(file);
+      return true;
+    }
+  } catch {
+    /* ignore */
+  }
+  return false;
 }

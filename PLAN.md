@@ -66,9 +66,10 @@ live preview by running the same `render.ts` path used for export -> true WYSIWY
 ## 5. Tech stack
 
 - **TypeScript** + **VS Code Extension API**
-- **markdown-it** — markdown -> HTML (same engine family as VS Code preview)
-- **Puppeteer** — HTML -> PDF (headers/footers/page numbers)
+- **markdown-it** (+ highlight.js, KaTeX, footnote/task-list plugins) — markdown -> HTML
+- **puppeteer-core** — HTML -> PDF via the user's installed Chrome/Edge/Chromium (auto-detected)
 - **html-to-docx** — HTML -> Word, *no Pandoc*
+- **gray-matter** — YAML front-matter parsing
 - **Webview** — the visual customization studio + live preview
 - Profiles stored as JSON under `.markready/profiles/` (shareable via git)
 
@@ -91,6 +92,10 @@ live preview by running the same `render.ts` path used for export -> true WYSIWY
 - **v0.3** — logo positioning, watermarks, code-block themes.
 - **v0.4** — optional AI tone-polish (Tier 2, bring-your-own-key).
 - **v0.5** — publish to Marketplace + Open VSX, optional license-key for premium features.
+- **v1.2 (shipped)** — puppeteer-core PDF engine with browser auto-detect; page-accurate
+  zoomable preview; profile manager; inline cleanup toggles; code highlighting, KaTeX math,
+  task lists, footnotes, front matter; TOC depth + heading numbering; watermark; embedded
+  images; cleanup unit tests + CI.
 
 ## 8. How to run
 

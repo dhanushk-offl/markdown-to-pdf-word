@@ -135,6 +135,7 @@ export class GatherPanel {
         cleanup: this.cleanup,
         ctx: makeContext(name, this.folder),
         defaultPath: path.join(this.folder, name),
+        chromePath: vscode.workspace.getConfiguration("markready").get<string>("chromePath", ""),
       });
     }
   }

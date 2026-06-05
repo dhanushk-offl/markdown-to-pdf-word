@@ -1,7 +1,42 @@
 # Changelog
 
+## 1.2.0
+
+### PDF engine
+- PDF export now uses **puppeteer-core** with an installed **Chrome / Edge / Chromium**
+  (auto-detected on Windows/macOS/Linux), honoring the new `markready.chromePath` setting
+  and the `CHROME_PATH` environment variable. No more bundled-Chromium dependency, and a
+  clear, actionable error when no browser is found. Word and HTML export need no browser.
+- The browser engine is now loaded lazily, so activation and Word/HTML export stay fast.
+
+### Rendering
+- **Relative body images** are inlined as data URIs, so images now appear in PDF and Word.
+- **Syntax highlighting** for fenced code blocks (highlight.js) with a selectable code theme.
+- **GitHub-flavored** extras: task-list checkboxes and footnotes (strikethrough/autolink were already on).
+- **Math** rendering with KaTeX (`$...$` / `$$...$$`), opt-in per profile.
+- **YAML front matter** is parsed and stripped; `title`/`author`/`date` flow into the cover
+  and into `{{title}}`, `{{author}}`, `{{date}}`, `{{subtitle}}` placeholders.
+- **TOC depth control** (H1–H6) and optional **automatic heading numbering** (1, 1.1, 1.1.2).
+- Optional **diagonal watermark** text on every page.
+
+### Studio
+- **Page-accurate preview**: the live preview renders a real paper sheet sized to the chosen
+  page size and orientation, with margins and representative header/footer bands.
+- **Zoom** controls (in/out/fit-to-width) and a **draggable splitter** between form and preview.
+- **Profile management**: New, Duplicate, Delete, Reset-to-preset, Import and Export JSON.
+- **Inline cleanup toggles** in the panel (per preview/export), plus font suggestions, color
+  swatches, and live validation for margin/font-size.
+- UI state (sidebar, splitter width, zoom) is **remembered** across reopens.
+- Esc now exits fullscreen even when focus is inside the preview.
+
+### Quality & infra
+- Unit tests (Vitest) guarding the cleanup invariants, a GitHub Actions CI pipeline, an
+  optional esbuild bundling script, a leaner VSIX, and Marketplace gallery banner.
+
 ## 1.1.0
 
+- Customization Studio now opens in the **full editor width** instead of a cramped side-by-side split, giving more room to customize.
+- The editor title-bar **Open Studio** action now shows as a compact icon instead of a long text label.
 - Customization Studio: added a **fullscreen preview** toggle (Esc to exit) so page layout is easy to see.
 - Customization Studio: the **sidebar can now be hidden** to give the preview the full panel width.
 - Customization Studio: added a **date picker** beside the cover Date field (the field still accepts `{{today}}` or any text).

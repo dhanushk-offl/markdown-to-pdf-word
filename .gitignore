@@ -4,6 +4,12 @@ node_modules/
 # Compiled output
 out/
 dist/
+*.tsbuildinfo
+
+# Test coverage / caches
+coverage/
+.vitest/
+.eslintcache
 
 # Packaged extension
 *.vsix

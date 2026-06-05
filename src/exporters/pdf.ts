@@ -1,16 +1,28 @@
-import puppeteer from "puppeteer";
 import { DocProfile } from "../profiles";
 import { RenderContext, resolvePlaceholders, escapeHtml } from "../render";
+import { findBrowser, NoBrowserError } from "./chrome";
 
-/** Render a full HTML document to a PDF file using headless Chromium. */
+/**
+ * Render a full HTML document to a PDF file using an installed Chrome/Edge/Chromium
+ * via puppeteer-core. puppeteer-core is required lazily so it never loads on
+ * activation or during Word/HTML export.
+ */
 export async function exportPdf(
   html: string,
   outPath: string,
   profile: DocProfile,
-  ctx: RenderContext
+  ctx: RenderContext,
+  chromePath?: string
 ): Promise<void> {
+  const executablePath = findBrowser(chromePath);
+  if (!executablePath) throw new NoBrowserError();
+
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const puppeteer = require("puppeteer-core");
+
   const browser = await puppeteer.launch({
     headless: true,
+    executablePath,
     args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
   try {

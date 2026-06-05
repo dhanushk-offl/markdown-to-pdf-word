@@ -36,6 +36,7 @@ export async function runExport(params: {
   cleanup: CleanupOptions;
   ctx: RenderContext;
   defaultPath: string; // suggested path WITHOUT extension
+  chromePath?: string; // optional browser path for PDF export
 }): Promise<void> {
   const { format, markdown, profile, cleanup, ctx } = params;
 
@@ -56,7 +57,7 @@ export async function runExport(params: {
       async () => {
         if (format === "pdf") {
           const html = buildHtml({ markdown, profile, ctx, cleanup });
-          await exportPdf(html, out, profile, ctx);
+          await exportPdf(html, out, profile, ctx, params.chromePath);
         } else if (format === "docx") {
           const html = buildDocxHtml({ markdown, profile, ctx, cleanup });
           await exportDocx(html, out, profile);

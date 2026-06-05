@@ -1,14 +1,38 @@
 # Source & build config (we ship compiled out/ only)
 .vscode/**
 src/**
+test/**
 sample/**
 tsconfig.json
+esbuild.js
+.github/**
 **/*.ts
 **/*.map
+**/*.tsbuildinfo
+package-lock.json
+coverage/**
+.vitest/**
+.eslintcache
+.editorconfig
+.eslintrc*
 
 # Docs / planning not needed in the package
 PLAN.md
 .gitignore
+
+# Trim dependency cruft from the VSIX (docs/tests/types/maps inside node_modules)
+node_modules/**/*.md
+node_modules/**/*.markdown
+node_modules/**/*.map
+node_modules/**/*.d.ts
+node_modules/**/test/**
+node_modules/**/tests/**
+node_modules/**/__tests__/**
+node_modules/**/docs/**
+node_modules/**/example/**
+node_modules/**/examples/**
+node_modules/**/.github/**
+node_modules/**/*.flow
 
 # Local agent / tooling workspace (must never ship) - root and any nested in deps
 .claude/**

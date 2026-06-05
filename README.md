@@ -64,15 +64,22 @@ Most existing tools do **one** piece of this. None combine them:
   ("Certainly! Here's…", "Let me know if…"), emoji, inconsistent heading spacing, smart
   quotes/dashes, and excessive blank lines. 100% offline and deterministic.
 - **Customization Studio:** a visual panel — no CSS — to set a cover page, brand colors,
-  fonts, header/footer, page numbers, and layout, with a **live preview** that matches the
-  exported result exactly.
+  fonts, header/footer, page numbers, and layout, with a **page-accurate live preview**
+  (real A4/Letter/Legal sheet, portrait/landscape, margins, header/footer bands), **zoom**,
+  a **draggable splitter**, and a **fullscreen** mode.
 - **Document Profiles:** save your look as a reusable profile in `.markready/profiles/*.json`
   and commit it so your whole team exports the same way. Ships with presets: **HR Formal,
-  Client Proposal, Internal Report, Minimal**.
-- **Table of Contents:** optional, auto-generated from headings with in-document links.
+  Client Proposal, Internal Report, Minimal** — plus in-studio **New / Duplicate / Delete /
+  Reset / Import / Export**.
+- **Rich markdown:** code **syntax highlighting** (selectable theme), **task lists**,
+  **footnotes**, optional **KaTeX math**, and **YAML front matter** (`title`/`author`/`date`
+  feed the cover and placeholders).
+- **Table of Contents:** optional, auto-generated with **depth control** and optional
+  **automatic heading numbering** (1, 1.1, 1.1.2); plus an optional page **watermark**.
 - **Folder Gather + Reorder:** gather every `.md` file in a folder, include/exclude and
   reorder them, then combine into one document.
-- **Three export formats:** PDF (via headless Chromium), **Word/.docx without Pandoc**, HTML.
+- **Three export formats:** PDF (via your installed Chrome/Edge/Chromium), **Word/.docx
+  without Pandoc**, HTML. Relative images are embedded automatically.
 - **Clean UI:** built with official VS Code Codicons — no emoji anywhere in the product.
 
 ## Installation
@@ -95,12 +102,14 @@ code --install-extension AnandSundaramoorthySa.markdown-to-pdf-word
 Download the `.vsix` from the [Releases](https://github.com/anandsundaramoorthysa/markdown-to-pdf-word/releases) page, then:
 
 ```bash
-code --install-extension markdown-to-pdf-word-1.1.0.vsix
+code --install-extension markdown-to-pdf-word-1.2.0.vsix
 ```
 
-> **Note:** PDF export uses Chromium. The extension uses its bundled engine, and if that is
-> unavailable it automatically falls back to an installed **Google Chrome** or **Microsoft Edge**.
-> You can also set a custom path via the `markready.chromePath` setting.
+> **PDF requirement:** PDF export renders through an installed **Google Chrome**, **Microsoft
+> Edge**, or **Chromium** (auto-detected on Windows/macOS/Linux). Most machines already have
+> one. If yours doesn't, install Chrome/Edge or point `markready.chromePath` at a browser
+> executable (or set the `CHROME_PATH` environment variable). **Word (.docx)** and **HTML**
+> export need no browser at all.
 
 ## Usage
 
@@ -139,9 +148,10 @@ Open the Command Palette (`Ctrl+Shift+P`):
 ## How It Works
 
 ```
-.md  ->  cleanup (rules, no AI)  ->  markdown-it -> HTML + cover + TOC + CSS  ->  PDF | DOCX | HTML
-                                              ^
-                                  Document Profile (JSON)
+.md  ->  front matter + cleanup (rules, no AI)  ->  markdown-it (+highlight/math/GFM)
+     ->  HTML + cover + TOC + CSS  ->  PDF (Chrome/Edge) | DOCX (no Pandoc) | HTML
+                          ^
+              Document Profile (JSON)
 ```
 
 The Customization Studio edits the Profile JSON and renders the preview through the **same**
@@ -166,13 +176,16 @@ look. Built-in presets are available out of the box and can be cloned and custom
 git clone https://github.com/anandsundaramoorthysa/markdown-to-pdf-word.git
 cd markdown-to-pdf-word
 
-# 2. Install dependencies (Puppeteer downloads Chromium once)
+# 2. Install dependencies (no browser download — PDF uses your installed Chrome/Edge)
 npm install
 
 # 3. Compile
 npm run compile
 
-# 4. Launch the Extension Development Host
+# 4. Run the unit tests (optional)
+npm test
+
+# 5. Launch the Extension Development Host
 #    Press F5 in VS Code
 ```
 
@@ -209,9 +222,12 @@ Contributions are welcome — bug fixes, new presets, new features, or docs.
 
 ## Roadmap
 
+- [x] Code-block theme options
+- [x] Page watermark
+- [x] Math (KaTeX) and richer markdown (task lists, footnotes, front matter)
 - [ ] AI tone-polish (optional, bring-your-own-key)
-- [ ] Logo positioning and watermarks
-- [ ] Code-block theme options
+- [ ] Mermaid diagrams (kept off for now to preserve the fully-offline, small-bundle promise)
+- [ ] Logo positioning in header/footer
 - [ ] Publish to Open VSX (for Cursor / VSCodium / Windsurf)
 - [ ] More built-in profile presets
 
@@ -234,8 +250,11 @@ If you have any questions, feedback, or suggestions, feel free to reach out:
 Built with these excellent open-source projects:
 
 - [markdown-it](https://github.com/markdown-it/markdown-it) — Markdown parsing and rendering
-- [Puppeteer](https://github.com/puppeteer/puppeteer) — HTML to PDF via headless Chromium
+- [puppeteer-core](https://github.com/puppeteer/puppeteer) — HTML to PDF via your installed browser
 - [html-to-docx](https://github.com/privateOmega/html-to-docx) — HTML to Word, no Pandoc
+- [highlight.js](https://github.com/highlightjs/highlight.js) — code syntax highlighting
+- [KaTeX](https://github.com/KaTeX/KaTeX) — fast math typesetting
+- [gray-matter](https://github.com/jonschlinkert/gray-matter) — YAML front-matter parsing
 - [VS Code Codicons](https://github.com/microsoft/vscode-codicons) — the icon set used in the UI
 
 Thanks to the VS Code extension community for the guidance and inspiration.

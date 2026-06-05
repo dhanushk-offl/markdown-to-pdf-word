@@ -79,6 +79,7 @@ async function quickExport(format: Format) {
     cleanup: getCleanup(),
     ctx: makeContext(md.filename, md.baseDir),
     defaultPath: path.join(md.baseDir, md.filename),
+    chromePath: cfg().get<string>("chromePath", ""),
   });
 }
 

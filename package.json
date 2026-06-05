@@ -2,13 +2,17 @@
   "name": "markdown-to-pdf-word",
   "displayName": "Markdown to PDF & Word",
   "description": "Turn Markdown into a clean, professional PDF, Word, or HTML document - no Pandoc, no setup. Removes AI clutter, adds a cover page and branding.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "publisher": "AnandSundaramoorthySa",
   "author": {
     "name": "Anand Sundaramoorthy"
   },
   "license": "MIT",
   "icon": "media/icon.png",
+  "galleryBanner": {
+    "color": "#1a3d7c",
+    "theme": "dark"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/anandsundaramoorthysa/markdown-to-pdf-word.git"
@@ -43,7 +47,8 @@
     "commands": [
       {
         "command": "markready.openStudio",
-        "title": "Markdown to PDF & Word: Open Customization Studio"
+        "title": "Markdown to PDF & Word: Open Customization Studio",
+        "icon": "media/icon.png"
       },
       {
         "command": "markready.exportPdf",
@@ -112,6 +117,11 @@
           "default": "HR Formal",
           "description": "The document profile used by quick export commands."
         },
+        "markready.chromePath": {
+          "type": "string",
+          "default": "",
+          "description": "Optional path to a Chrome/Edge/Chromium executable for PDF export. If empty, the extension auto-detects an installed browser (and falls back to the CHROME_PATH environment variable)."
+        },
         "markready.cleanup.removeChatter": {
           "type": "boolean",
           "default": true,
@@ -143,18 +153,28 @@
   "scripts": {
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
-    "watch": "tsc -watch -p ./"
+    "watch": "tsc -watch -p ./",
+    "test": "vitest run",
+    "bundle": "node esbuild.js"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.45",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.10.0",
     "html-to-docx": "^1.8.0",
+    "katex": "^0.16.11",
     "markdown-it": "^14.1.0",
-    "puppeteer": "^23.11.1"
+    "markdown-it-footnote": "^4.0.0",
+    "markdown-it-katex": "^2.0.3",
+    "markdown-it-task-lists": "^2.1.1",
+    "puppeteer-core": "^23.11.1"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.85.0",
-    "typescript": "^5.5.4"
+    "esbuild": "^0.24.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.1.8"
   }
 }
