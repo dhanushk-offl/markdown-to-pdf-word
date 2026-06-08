@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.2
+
+- **PDF "no browser found" fixed**: browser auto-detection is now far more thorough —
+  hardcoded standard install paths (so Edge, present on every Windows PC, is always found),
+  the Windows registry "App Paths", a `where`/`which` PATH lookup, more locations on
+  macOS/Linux (incl. `~/Applications`, Brave, Chromium, Canary, Arc), and the
+  `PUPPETEER_EXECUTABLE_PATH` env var. PDF export should now work out of the box wherever a
+  Chromium-family browser exists.
+- **Preview now shows separate pages like a Word document**: the live preview paginates into
+  discrete A4/Letter/Legal sheets (white pages with gaps and shadows, per-page header/footer
+  and page numbers) instead of one continuous strip. Falls back gracefully to a single sheet
+  if pagination can't run.
+
 ## 1.2.1
 
 - **Preview proportions fixed**: the live preview sheet now uses the real page geometry in

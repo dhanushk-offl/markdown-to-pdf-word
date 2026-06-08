@@ -754,18 +754,121 @@ export class StudioPanel {
     if (($("orientation").value || "portrait") === "landscape") { const t=w; w=h; h=t; }
     return { w, h };
   }
-  function sizePage() {
+  function cssLenToPxClient(v) {
+    const m = String(v||"").trim().match(/^([\\d.]+)\\s*(cm|mm|in|pt|px)?$/i);
+    if (!m) return 38;
+    const f = {cm:37.7952755906, mm:3.7795275591, in:96, pt:1.3333333, px:1}[(m[2]||"px").toLowerCase()] || 1;
+    return parseFloat(m[1]) * f;
+  }
+
+  // Paginate the preview into discrete A4 "sheets" (like a Word document):
+  // operate on the same-origin iframe DOM from here (no scripts run inside it).
+  // Returns true on success; any failure falls back to the continuous sheet.
+  function paginate() {
     const ifr = $("preview");
-    const { w, h } = pageDimsPx();
-    ifr.style.width = w + "px";
-    try {
-      const doc = ifr.contentDocument;
-      if (doc && doc.body) {
-        const sh = doc.documentElement.scrollHeight;
-        const pages = Math.max(1, Math.ceil((sh - 2) / h)); // round up to whole pages
-        ifr.style.height = (pages * h) + "px";
+    const doc = ifr.contentDocument;
+    if (!doc || !doc.body) return false;
+    if (doc.getElementById("mr-sheets")) return true;        // already done this load
+    const page = doc.querySelector(".mr-page");
+    if (!page) return false;
+
+    const dims = pageDimsPx(); const w = dims.w, h = dims.h;
+    const marginPx = Math.round(cssLenToPxClient($("margin").value || "2cm"));
+    const headerEl = page.querySelector(".mr-pv-header");
+    const footerEl = page.querySelector(".mr-pv-footer");
+    const headerHTML = headerEl ? headerEl.outerHTML : "";
+    const showFooter = !!footerEl;
+    const showPageNo = $("footerPageNumbers").checked;
+    const footerText = footerEl && footerEl.querySelector("span") ? footerEl.querySelector("span").textContent : "";
+    const reserveTop = headerHTML ? 28 : 0;
+    const reserveBot = showFooter ? 28 : 0;
+    const avail = Math.max(140, h - 2*marginPx - reserveTop - reserveBot);
+
+    const cover = page.querySelector(".mr-cover");
+    const toc = page.querySelector(".mr-toc");
+    const content = page.querySelector(".content");
+    const blocks = content ? Array.prototype.slice.call(content.children) : [];
+    if (!cover && !toc && !blocks.length) return false;
+
+    // Inject sheet CSS and attach the container BEFORE measuring (detached nodes
+    // report scrollHeight 0). The body area uses natural height so measurement works.
+    const st = doc.createElement("style");
+    st.textContent =
+      "html,body{background:#525659;margin:0;}" +
+      "#mr-sheets{display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px 0;}" +
+      ".mr-sheet{width:" + w + "px;min-height:" + h + "px;background:#fff;box-shadow:0 1px 12px rgba(0,0,0,.45);overflow:hidden;}" +
+      ".mr-sheet-inner{box-sizing:border-box;padding:" + marginPx + "px;min-height:" + h + "px;display:flex;flex-direction:column;}" +
+      ".mr-sheet-body{flex:0 0 auto;}" +
+      ".mr-sheet .mr-pv-header{border-bottom:1px solid #eee;margin-bottom:8px;flex:0 0 auto;}" +
+      ".mr-sheet .mr-pv-footer{border-top:1px solid #eee;margin-top:auto;flex:0 0 auto;}" +
+      ".mr-cover{min-height:0 !important;flex:1 1 auto;}";
+    doc.head.appendChild(st);
+
+    const sheets = doc.createElement("div");
+    sheets.id = "mr-sheets";
+    doc.body.appendChild(sheets);
+    const footerNodes = [];
+
+    function newSheet(withBands) {
+      const sheet = doc.createElement("div"); sheet.className = "mr-sheet";
+      const inner = doc.createElement("div"); inner.className = "mr-sheet-inner";
+      sheet.appendChild(inner); sheets.appendChild(sheet);
+      if (!withBands) return inner;
+      if (headerHTML) inner.insertAdjacentHTML("beforeend", headerHTML);
+      const area = doc.createElement("div"); area.className = "mr-sheet-body"; inner.appendChild(area);
+      if (showFooter) {
+        const f = doc.createElement("div"); f.className = "mr-pv-footer";
+        f.innerHTML = "<span>" + (footerText || "") + "</span><span class=\\"mr-pageno\\"></span>";
+        inner.appendChild(f); footerNodes.push(f.querySelector(".mr-pageno"));
       }
-    } catch (e) {}
+      return area;
+    }
+
+    if (cover) { newSheet(false).appendChild(cover); }
+    if (toc) { newSheet(false).appendChild(toc); }
+
+    if (blocks.length) {
+      let area = newSheet(true);
+      for (let i = 0; i < blocks.length; i++) {
+        const blk = blocks[i];
+        if (blk.classList && blk.classList.contains("page-break")) { area = newSheet(true); continue; }
+        area.appendChild(blk);
+        if (area.scrollHeight > avail && area.childNodes.length > 1) {
+          area.removeChild(blk);
+          area = newSheet(true);
+          area.appendChild(blk);
+        }
+      }
+    }
+
+    if (!sheets.children.length) { sheets.remove(); return false; }
+
+    const offset = (cover ? 1 : 0) + (toc ? 1 : 0);
+    footerNodes.forEach((node, j) => { if (node) node.textContent = showPageNo ? ("Page " + (offset + j + 1)) : ""; });
+
+    if (page.parentNode) page.parentNode.removeChild(page);  // drop the original single page
+    return true;
+  }
+
+  let lastPaginated = false;
+  function sizePage(paginated) {
+    if (paginated === undefined) paginated = lastPaginated; else lastPaginated = paginated;
+    const ifr = $("preview");
+    const dims = pageDimsPx(); const w = dims.w, h = dims.h;
+    ifr.style.width = w + "px";
+    if (paginated) {
+      ifr.style.boxShadow = "none"; ifr.style.background = "transparent";
+      try { const doc = ifr.contentDocument; if (doc) ifr.style.height = doc.documentElement.scrollHeight + "px"; } catch (e) {}
+    } else {
+      ifr.style.boxShadow = ""; ifr.style.background = "#fff";
+      try {
+        const doc = ifr.contentDocument;
+        if (doc && doc.body) {
+          const sh = doc.documentElement.scrollHeight;
+          ifr.style.height = (Math.max(1, Math.ceil((sh - 2) / h)) * h) + "px";
+        }
+      } catch (e) {}
+    }
     ifr.style.zoom = ui.zoom;
     $("zoomLabel").textContent = Math.round(ui.zoom*100) + "%";
   }
@@ -778,14 +881,18 @@ export class StudioPanel {
   });
 
   $("preview").addEventListener("load", () => {
-    sizePage();
+    const ifr = $("preview");
+    ifr.style.zoom = 1; // measure unzoomed
+    let ok = false;
+    try { ok = paginate(); } catch (e) { ok = false; }
+    sizePage(ok);
     // Esc to exit fullscreen even when focus is inside the (same-origin) preview.
     try {
-      const doc = $("preview").contentDocument;
+      const doc = ifr.contentDocument;
       doc && doc.addEventListener("keydown", (e) => { if (e.key === "Escape") setFullscreen(false); });
     } catch (e) {}
   });
-  window.addEventListener("resize", sizePage);
+  window.addEventListener("resize", () => sizePage());
 
   window.addEventListener("message", (event) => {
     const m = event.data;
