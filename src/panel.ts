@@ -393,7 +393,9 @@ export class StudioPanel {
   body.sidebar-hidden .splitter { display:none; }
   .desk { flex:1; min-width:0; overflow:auto; background:#525659; display:flex;
           justify-content:center; align-items:flex-start; padding:20px; }
-  iframe { border:0; background:#fff; box-shadow:0 2px 16px rgba(0,0,0,.5); }
+  .pagewrap { flex:0 0 auto; overflow:hidden; }
+  iframe { border:0; background:#fff; box-shadow:0 2px 16px rgba(0,0,0,.5);
+           transform-origin: top left; }
 
   /* Fullscreen preview */
   body.preview-full .toolbar, body.preview-full .form, body.preview-full .splitter { display:none; }
@@ -537,7 +539,7 @@ export class StudioPanel {
       <div class="hint">Tip: "Save" stores the profile in <code>.markready/profiles</code> so your whole team exports with the same look (commit it to git).</div>
     </div>
     <div class="splitter" id="splitter"></div>
-    <div class="desk"><iframe id="preview" sandbox="allow-same-origin"></iframe></div>
+    <div class="desk"><div class="pagewrap"><iframe id="preview" sandbox="allow-same-origin"></iframe></div></div>
   </div>
 
   <datalist id="fontList">
@@ -869,8 +871,21 @@ export class StudioPanel {
         }
       } catch (e) {}
     }
-    ifr.style.zoom = ui.zoom;
-    $("zoomLabel").textContent = Math.round(ui.zoom*100) + "%";
+    // Scale with transform, not CSS zoom. CSS zoom on a nested iframe is
+    // unreliable inside the VS Code webview: the iframe box scales but its
+    // content viewport does not track, so the fixed-width sheet and its content
+    // diverge and the page gets clipped. transform:scale keeps the iframe's own
+    // layout and viewport intact; the wrapper reserves the scaled box so the
+    // desk still centers and scrolls correctly.
+    const z = ui.zoom;
+    ifr.style.transform = "scale(" + z + ")";
+    const wrap = ifr.parentElement;
+    if (wrap) {
+      const hh = parseFloat(ifr.style.height) || h;
+      wrap.style.width = (w * z) + "px";
+      wrap.style.height = (hh * z) + "px";
+    }
+    $("zoomLabel").textContent = Math.round(z*100) + "%";
   }
   function setZoom(z) { ui.zoom = Math.max(0.25, Math.min(3, z)); saveUi(); sizePage(); }
   $("zoomInBtn").addEventListener("click", () => setZoom(ui.zoom + 0.1));
@@ -882,7 +897,7 @@ export class StudioPanel {
 
   $("preview").addEventListener("load", () => {
     const ifr = $("preview");
-    ifr.style.zoom = 1; // measure unzoomed
+    ifr.style.transform = "none"; // measure unscaled
     let ok = false;
     try { ok = paginate(); } catch (e) { ok = false; }
     sizePage(ok);
