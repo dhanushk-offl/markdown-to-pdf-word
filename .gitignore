@@ -25,7 +25,7 @@ npm-debug.log*
 # VS Code test runner
 .vscode-test/
 
-# Claude Code / local agent workspace
+# Local agent / tooling workspace
 .claude/
 
 # Local environment
