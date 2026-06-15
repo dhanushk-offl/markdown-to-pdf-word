@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.3
+
+- **Preview zoom no longer clips the page**: zooming in or out used CSS `zoom` on the preview
+  iframe, which is unreliable inside the VS Code webview (the iframe box scaled but its content
+  viewport did not, so the fixed-width sheet and its content diverged and the page got cut off
+  at any non-100% zoom). The preview now scales with `transform: scale` and reserves the scaled
+  box in a wrapper, so the page keeps its true proportions and stays centered at every zoom level.
+
 ## 1.2.2
 
 - **PDF "no browser found" fixed**: browser auto-detection is now far more thorough —
