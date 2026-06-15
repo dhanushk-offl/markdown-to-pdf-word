@@ -92,10 +92,11 @@ live preview by running the same `render.ts` path used for export -> true WYSIWY
 - **v0.3** — logo positioning, watermarks, code-block themes.
 - **v0.4** — optional AI tone-polish (Tier 2, bring-your-own-key).
 - **v0.5** — publish to Marketplace + Open VSX, optional license-key for premium features.
-- **v1.2.2 (shipped)** — puppeteer-core PDF engine with thorough browser auto-detect
-  (paths + registry + PATH); preview paginated into discrete Word-like A4 pages; profile
-  manager; inline cleanup toggles; code highlighting, KaTeX math, task lists, footnotes,
-  front matter; TOC depth + heading numbering; watermark; embedded images; tests + CI.
+- **v1.2.3 (shipped)** — puppeteer-core PDF engine with thorough browser auto-detect
+  (paths + registry + PATH); preview paginated into discrete Word-like A4 pages with
+  transform-based zoom (no clipping); profile manager; inline cleanup toggles; code
+  highlighting, KaTeX math, task lists, footnotes, front matter; TOC depth + heading
+  numbering; watermark; embedded images; tests + CI.
 
 ## 8. How to run
 
