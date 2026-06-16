@@ -69,6 +69,18 @@
       {
         "command": "markready.exportFolder",
         "title": "Markdown to PDF & Word: Gather Folder into One Document"
+      },
+      {
+        "command": "markready.configureAi",
+        "title": "Markdown to PDF & Word: Configure AI API Key"
+      },
+      {
+        "command": "markready.testAiKey",
+        "title": "Markdown to PDF & Word: Test AI API Key"
+      },
+      {
+        "command": "markready.clearAiKeys",
+        "title": "Markdown to PDF & Word: Clear All AI API Keys"
       }
     ],
     "menus": {
@@ -146,6 +158,29 @@
           "type": "boolean",
           "default": true,
           "description": "Convert smart quotes/dashes/ellipses to plain ASCII."
+        },
+        "markready.ai.defaultProvider": {
+          "type": "string",
+          "default": "openai",
+          "enum": [
+            "openai",
+            "claude",
+            "gemini",
+            "openrouter"
+          ],
+          "description": "Default AI provider for tone polish."
+        },
+        "markready.ai.defaultModel": {
+          "type": "string",
+          "default": "",
+          "description": "Default AI model (empty = use provider default)."
+        },
+        "markready.ai.defaultTemperature": {
+          "type": "number",
+          "default": 0.3,
+          "minimum": 0,
+          "maximum": 1,
+          "description": "AI response creativity (0.0 = deterministic, 1.0 = creative)."
         }
       }
     }
@@ -159,6 +194,7 @@
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.45",
+    "diff": "^9.0.0",
     "gray-matter": "^4.0.3",
     "highlight.js": "^11.10.0",
     "html-to-docx": "^1.8.0",
@@ -170,6 +206,7 @@
     "puppeteer-core": "^23.11.1"
   },
   "devDependencies": {
+    "@types/diff": "^7.0.2",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^20.14.0",
     "@types/vscode": "^1.85.0",

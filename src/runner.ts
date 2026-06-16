@@ -11,6 +11,8 @@ import { RenderContext, buildHtml, buildDocxHtml } from "./render";
 import { exportPdf } from "./exporters/pdf";
 import { exportDocx } from "./exporters/docx";
 import { exportHtml } from "./exporters/html";
+import { AiPolishConfig, AiProviderId } from "./ai/types";
+import { polishMarkdown } from "./ai/client";
 
 export type Format = "pdf" | "docx" | "html";
 
@@ -37,6 +39,8 @@ export async function runExport(params: {
   ctx: RenderContext;
   defaultPath: string; // suggested path WITHOUT extension
   chromePath?: string; // optional browser path for PDF export
+  aiPolish?: AiPolishConfig;
+  getAiKey?: (provider: AiProviderId) => Promise<string | undefined>;
 }): Promise<void> {
   const { format, markdown, profile, cleanup, ctx } = params;
 
@@ -55,14 +59,18 @@ export async function runExport(params: {
         title: `Markdown to PDF & Word: exporting ${format.toUpperCase()}…`,
       },
       async () => {
+        const polishFn =
+          params.aiPolish?.enabled && params.getAiKey
+            ? (md: string) => polishMarkdown(md, params.aiPolish!, params.getAiKey!)
+            : undefined;
         if (format === "pdf") {
-          const html = buildHtml({ markdown, profile, ctx, cleanup });
+          const html = await buildHtml({ markdown, profile, ctx, cleanup, polishMarkdown: polishFn });
           await exportPdf(html, out, profile, ctx, params.chromePath);
         } else if (format === "docx") {
-          const html = buildDocxHtml({ markdown, profile, ctx, cleanup });
+          const html = await buildDocxHtml({ markdown, profile, ctx, cleanup, polishMarkdown: polishFn });
           await exportDocx(html, out, profile);
         } else {
-          const html = buildHtml({ markdown, profile, ctx, cleanup });
+          const html = await buildHtml({ markdown, profile, ctx, cleanup, polishMarkdown: polishFn });
           await exportHtml(html, out);
         }
       }
