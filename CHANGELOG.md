@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.3.0
+
+### 🎉 AI Tone Polish
+- **Four supported providers:** OpenAI (GPT-4o-mini), Claude (Haiku), Google Gemini (Flash),
+  and OpenRouter (multi-model gateway) — bring your own API key
+- **Inline diff review:** see exactly what changed before applying — green for additions,
+  red for removals, with line numbers and change stats
+- **Apply / Discard:** accept or reject the polished result; discarded changes leave your
+  original markdown untouched
+- **Secure key storage:** API keys stored in VS Code's secret storage — never in profiles,
+  settings, logs, or files
+- **Configurable:** provider, model, system prompt, and temperature (0.0–1.0) per profile
+- **Editable system prompt** with one-click reset to the carefully crafted default
+- **Model browser:** fetch available models from any provider and pick from a dropdown
+- **Key management:** configure, test, and clear API keys via commands or the studio
+- **Polish during export:** when enabled, polish is applied transparently during PDF/DOCX/HTML export
+- **Provider badges** in README: OpenAI, Claude, Gemini, OpenRouter
+
+### 🧹 Other Improvements
+- **Form validation** for margin and font-size fields with visual error states
+- **Color picker** sync between text input and native browser color picker
+- **Color swatches** for quick brand-color selection (8 pre-defined swatches)
+- **Contribution guidelines** (CONTRIBUTING.md) with full dev setup and coding standards
+- **Code of Conduct** (CODE_OF_CONDUCT.md) — Contributor Covenant v2.1
+- **Documentation overhaul:** README now includes AI feature docs, provider badges with
+  branded shields.io badges, star-history graph, improved layout, and clearer navigation
+- **Preview zoom reliability fix:** zooming in/out no longer clips the page
+
 ## 1.2.3
 
 - **Preview zoom no longer clips the page**: zooming in or out used CSS `zoom` on the preview

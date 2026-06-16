@@ -20,6 +20,10 @@ import {
 import { CleanupOptions } from "./cleanup";
 import { buildHtml, makeRelativeLogo } from "./render";
 import { makeContext, runExport, Format } from "./runner";
+import { AiProviderId, AiPolishConfig, PROVIDER_META } from "./ai/types";
+import { polishMarkdown, listModels, validateKey } from "./ai/client";
+import { computeDiff, diffStats } from "./ai/diff";
+import { DEFAULT_SYSTEM_PROMPT } from "./ai/prompts";
 
 export interface StudioInit {
   markdown: string;
@@ -28,6 +32,7 @@ export interface StudioInit {
   workspaceRoot: string | undefined;
   cleanup: CleanupOptions;
   defaultProfileName: string;
+  getAiKey?: (provider: AiProviderId) => Promise<string | undefined>;
 }
 
 export class StudioPanel {
@@ -45,6 +50,7 @@ export class StudioPanel {
   private cleanup: CleanupOptions;
   private defaultProfileName: string;
   private profile: DocProfile;
+  private getAiKey?: (provider: AiProviderId) => Promise<string | undefined>;
 
   public static createOrShow(context: vscode.ExtensionContext, init: StudioInit) {
     // Open in the active column (full editor width) so the studio has room to
@@ -81,6 +87,7 @@ export class StudioPanel {
     this.workspaceRoot = init.workspaceRoot;
     this.cleanup = init.cleanup;
     this.defaultProfileName = init.defaultProfileName;
+    this.getAiKey = init.getAiKey;
     this.profile = getProfile(init.workspaceRoot, init.defaultProfileName) || defaultProfile();
 
     this.panel.webview.html = this.html();
@@ -95,6 +102,7 @@ export class StudioPanel {
     this.workspaceRoot = init.workspaceRoot;
     this.cleanup = init.cleanup;
     this.defaultProfileName = init.defaultProfileName;
+    this.getAiKey = init.getAiKey;
     this.post({ type: "source", filename: this.filename });
     this.sendInit();
   }
@@ -115,8 +123,8 @@ export class StudioPanel {
     return `${base} ${i}`;
   }
 
-  private renderPreview() {
-    const html = buildHtml({
+  private async renderPreview() {
+    const html = await buildHtml({
       markdown: this.markdown,
       profile: this.profile,
       ctx: this.ctx(),
@@ -128,61 +136,77 @@ export class StudioPanel {
     this.post({ type: "preview", html });
   }
 
-  private sendInit() {
+  private async sendInit() {
+    const profile = this.fillDefaultPrompt(this.profile);
     this.post({
       type: "init",
       profiles: this.profileNames(),
-      profile: this.profile,
+      profile,
       cleanup: this.cleanup,
       filename: this.filename,
+      defaultPrompt: DEFAULT_SYSTEM_PROMPT,
     });
-    this.renderPreview();
+    await this.renderPreview();
+  }
+
+  private fillDefaultPrompt(profile: DocProfile): DocProfile {
+    if (!profile || typeof profile !== "object") return defaultProfile();
+    try {
+      const p = JSON.parse(JSON.stringify(profile)) as DocProfile;
+      if (p.options?.aiPolish && !p.options.aiPolish.systemPrompt) {
+        p.options.aiPolish.systemPrompt = DEFAULT_SYSTEM_PROMPT;
+      }
+      return p;
+    } catch {
+      return defaultProfile();
+    }
   }
 
   private async onMessage(msg: any) {
+    try {
     switch (msg?.type) {
       case "ready":
-        this.sendInit();
+        await this.sendInit();
         break;
 
       case "change":
         this.profile = normalizeProfile(msg.profile);
-        this.renderPreview();
+        await this.renderPreview();
         break;
 
       case "cleanup":
         this.cleanup = { ...this.cleanup, ...(msg.cleanup || {}) };
-        this.renderPreview();
+        await this.renderPreview();
         break;
 
       case "selectProfile": {
         this.profile = getProfile(this.workspaceRoot, msg.name);
-        this.post({ type: "setProfile", profile: this.profile });
-        this.renderPreview();
+        this.post({ type: "setProfile", profile: this.fillDefaultPrompt(this.profile) });
+        await this.renderPreview();
         break;
       }
 
       case "newProfile": {
         this.profile = defaultProfile();
         this.profile.name = this.uniqueName("New Profile");
-        this.post({ type: "setProfile", profile: this.profile });
-        this.renderPreview();
+        this.post({ type: "setProfile", profile: this.fillDefaultPrompt(this.profile) });
+        await this.renderPreview();
         break;
       }
 
       case "duplicateProfile": {
         this.profile = normalizeProfile(msg.profile);
         this.profile.name = this.uniqueName(`${this.profile.name} Copy`);
-        this.post({ type: "setProfile", profile: this.profile });
-        this.renderPreview();
+        this.post({ type: "setProfile", profile: this.fillDefaultPrompt(this.profile) });
+        await this.renderPreview();
         break;
       }
 
       case "resetProfile": {
         const cur = normalizeProfile(msg.profile);
         this.profile = builtinProfile(cur.name) || defaultProfile();
-        this.post({ type: "setProfile", profile: this.profile });
-        this.renderPreview();
+        this.post({ type: "setProfile", profile: this.fillDefaultPrompt(this.profile) });
+        await this.renderPreview();
         vscode.window.showInformationMessage(
           `Reset "${this.profile.name}" to preset defaults (Save to keep).`
         );
@@ -203,8 +227,8 @@ export class StudioPanel {
         if (pick !== "Delete") break;
         const removed = deleteProfile(this.workspaceRoot, name);
         this.profile = getProfile(this.workspaceRoot, this.defaultProfileName) || defaultProfile();
-        this.post({ type: "init", profiles: this.profileNames(), profile: this.profile, cleanup: this.cleanup, filename: this.filename });
-        this.renderPreview();
+        this.post({ type: "init", profiles: this.profileNames(), profile: this.fillDefaultPrompt(this.profile), cleanup: this.cleanup, filename: this.filename, defaultPrompt: DEFAULT_SYSTEM_PROMPT });
+        await this.renderPreview();
         vscode.window.showInformationMessage(
           removed ? `Deleted profile "${name}".` : `Profile "${name}" was a built-in (not saved); reset only.`
         );
@@ -239,8 +263,8 @@ export class StudioPanel {
           const raw = JSON.parse(fs.readFileSync(picked[0].fsPath, "utf8"));
           this.profile = normalizeProfile(raw);
           this.profile.name = this.uniqueName(this.profile.name);
-          this.post({ type: "setProfile", profile: this.profile });
-          this.renderPreview();
+          this.post({ type: "setProfile", profile: this.fillDefaultPrompt(this.profile) });
+          await this.renderPreview();
           vscode.window.showInformationMessage(`Imported profile "${this.profile.name}" (Save to keep).`);
         } catch (e: any) {
           vscode.window.showErrorMessage(`Could not import profile: ${e?.message ?? e}`);
@@ -258,8 +282,8 @@ export class StudioPanel {
           const rel = makeRelativeLogo(picked[0].fsPath, this.baseDir);
           this.profile = normalizeProfile(msg.profile);
           this.profile.cover.logo = rel;
-          this.post({ type: "setProfile", profile: this.profile });
-          this.renderPreview();
+          this.post({ type: "setProfile", profile: this.fillDefaultPrompt(this.profile) });
+          await this.renderPreview();
         }
         break;
       }
@@ -280,9 +304,74 @@ export class StudioPanel {
         break;
       }
 
+      case "fetchAiModels": {
+        if (!this.getAiKey) { this.post({ type: "aiModels", provider: msg.provider, models: [], error: "Not available" }); break; }
+        try {
+          const key = await this.getAiKey(msg.provider);
+          if (!key) { this.post({ type: "aiModels", provider: msg.provider, models: [], error: "No key configured" }); break; }
+          const models = await listModels(msg.provider, key);
+          this.post({ type: "aiModels", provider: msg.provider, models, error: null });
+        } catch (err: any) {
+          this.post({ type: "aiModels", provider: msg.provider, models: [], error: err?.message || "Unknown error" });
+        }
+        break;
+      }
+      case "testAiKey": {
+        if (!this.getAiKey) { this.post({ type: "aiKeyTestResult", provider: msg.provider, valid: false, message: "Not available" }); break; }
+        try {
+          const key = await this.getAiKey(msg.provider);
+          if (!key) { this.post({ type: "aiKeyTestResult", provider: msg.provider, valid: false, message: "No API key configured" }); break; }
+          const result = await validateKey(msg.provider, key);
+          this.post({ type: "aiKeyTestResult", ...result, provider: msg.provider });
+        } catch (err: any) {
+          this.post({ type: "aiKeyTestResult", provider: msg.provider, valid: false, message: err?.message || "Unknown error" });
+        }
+        break;
+      }
+      case "configureAi": {
+        vscode.commands.executeCommand("markready.configureAi");
+        break;
+      }
+      case "polishNow": {
+        if (!this.getAiKey) { this.post({ type: "aiStatus", status: "AI polish unavailable" }); break; }
+        const aiOpts = msg.profile?.options?.aiPolish;
+        const config: AiPolishConfig = {
+          enabled: true,
+          provider: aiOpts?.provider || "openai",
+          model: aiOpts?.model || "gpt-4o-mini",
+          systemPrompt: aiOpts?.systemPrompt || "",
+          temperature: aiOpts?.temperature ?? 0.3,
+        };
+        const original = this.markdown;
+        try {
+          const polished = await polishMarkdown(original, config, this.getAiKey, (status) => {
+            this.post({ type: "aiStatus", status });
+          });
+          if (polished !== original && polished.trim()) {
+            const diff = computeDiff(original, polished);
+            const stats = diffStats(diff);
+            const statsText = `${stats.changed} line${stats.changed === 1 ? "" : "s"} changed (${stats.added} added, ${stats.removed} removed)`;
+            this.post({ type: "aiPolishResult", polished, diff, stats: statsText });
+          } else {
+            this.post({ type: "aiStatus", status: "No changes — text is already polished" });
+          }
+        } catch (err: any) {
+          this.post({ type: "aiStatus", status: "AI polish failed: " + (err?.message || "Unknown") });
+        }
+        break;
+      }
+      case "applyAiPolish": {
+        if (msg.polished && msg.polished !== this.markdown) {
+          this.markdown = msg.polished;
+          await this.renderPreview();
+        }
+        break;
+      }
+
       case "export": {
         this.profile = normalizeProfile(msg.profile);
         const format = msg.format as Format;
+        const aiPolish = this.profile.options?.aiPolish as AiPolishConfig | undefined;
         await runExport({
           format,
           markdown: this.markdown,
@@ -291,6 +380,8 @@ export class StudioPanel {
           ctx: this.ctx(),
           defaultPath: path.join(this.baseDir, this.filename),
           chromePath: vscode.workspace.getConfiguration("markready").get<string>("chromePath", ""),
+          aiPolish,
+          getAiKey: this.getAiKey,
         });
         break;
       }
@@ -306,13 +397,22 @@ export class StudioPanel {
             : "Untitled";
           this.baseDir = fsPath ? path.dirname(fsPath) : this.baseDir;
           this.post({ type: "source", filename: this.filename });
-          this.renderPreview();
+          await this.renderPreview();
           vscode.window.showInformationMessage(`Markdown to PDF & Word: loaded "${this.filename}".`);
         } else {
           vscode.window.showWarningMessage("Focus a markdown editor, then click Refresh.");
         }
         break;
       }
+      case "scriptError": {
+        console.error("[MarkReady Studio] Webview script error:", msg.error);
+        vscode.window.showErrorMessage(`MarkReady Studio script error: ${msg.error}`);
+        break;
+      }
+    }
+    } catch (err: any) {
+      console.error("[MarkReady Studio] onMessage error:", err?.message || err);
+      vscode.window.showErrorMessage(`MarkReady Studio error: ${err?.message || err}`);
     }
   }
 
@@ -415,6 +515,34 @@ export class StudioPanel {
   .swatches { display:flex; gap:4px; margin-top:4px; flex-wrap:wrap; }
   .swatch { width:16px; height:16px; border-radius:3px; cursor:pointer; border:1px solid rgba(0,0,0,.25); }
   .hint { font-size:10px; opacity:.6; margin-top:6px; }
+
+  /* AI polish animations */
+  @keyframes ai-spin { to { transform: rotate(360deg); } }
+  .ai-spinning i { animation: ai-spin .8s linear infinite; display:inline-block; }
+  .ai-spinning { opacity:.8; }
+  @keyframes ai-slide { 0%{transform:translateX(-100%)} 100%{transform:translateX(350%)} }
+  .ai-progress { height:3px; background:var(--vscode-panel-border,#e0e0e0); border-radius:2px; overflow:hidden; margin:6px 0; display:none; }
+  .ai-progress.active { display:block; }
+  .ai-progress-bar { height:100%; width:35%; background:var(--vscode-button-background,#1a3d7c); border-radius:2px; animation:ai-slide 1.2s ease-in-out infinite; }
+  @keyframes ai-dots { 0%{opacity:.3} 50%{opacity:1} 100%{opacity:.3} }
+  .ai-dots::after { content:'...'; animation:ai-dots 1.2s ease-in-out infinite; display:inline-block; width:1.2em; text-align:left; }
+
+  /* Diff panel */
+  #aiDiffPanel { border:1px solid var(--vscode-panel-border); border-radius:6px; margin:8px 0; overflow:hidden; }
+  #aiDiffPanel .diff-header { display:flex; justify-content:space-between; align-items:center; padding:8px 10px;
+    background:var(--vscode-sideBar-background,#f3f3f3); border-bottom:1px solid var(--vscode-panel-border); font-weight:600; font-size:12px; }
+  #aiDiffPanel .diff-body { max-height:360px; overflow:auto; font-family:monospace; font-size:11px; line-height:1.6; }
+  #aiDiffPanel .diff-line { display:flex; padding:0 8px; min-height:18px; }
+  #aiDiffPanel .diff-line.added { background:rgba(0,200,80,.1); }
+  #aiDiffPanel .diff-line.removed { background:rgba(220,50,50,.1); }
+  #aiDiffPanel .diff-ln { color:#999; min-width:32px; text-align:right; padding-right:8px; user-select:none; flex-shrink:0; }
+  #aiDiffPanel .diff-marker { min-width:16px; user-select:none; flex-shrink:0; }
+  #aiDiffPanel .diff-marker.added { color:#090; }
+  #aiDiffPanel .diff-marker.removed { color:#c00; }
+  #aiDiffPanel .diff-text { flex:1; white-space:pre-wrap; word-break:break-word; }
+  #aiDiffPanel .diff-actions { display:flex; gap:8px; padding:8px 10px;
+    border-top:1px solid var(--vscode-panel-border); background:var(--vscode-sideBar-background,#f3f3f3); }
+  #aiDiffPanel .diff-actions button { font-size:11px; }
 </style>
 </head>
 <body>
@@ -536,6 +664,56 @@ export class StudioPanel {
         <div class="inline"><input type="checkbox" id="cl_normalizePunctuation"/><label style="margin:0">Plain punctuation</label></div>
         <div class="hint">These affect this preview/export only. Defaults come from settings.</div>
       </fieldset>
+
+      <fieldset>
+        <legend>AI Tone Polish</legend>
+        <div class="inline"><input type="checkbox" id="aiPolishEnabled"/><label style="margin:0">Enable AI polish</label></div>
+        <div id="aiPolishSettings" style="display:none;margin-top:6px">
+          <label>Provider</label>
+          <select id="aiProvider">
+            <option value="openai">OpenAI</option>
+            <option value="claude">Claude (Anthropic)</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="openrouter">OpenRouter</option>
+          </select>
+          <label>Model</label>
+          <div class="row">
+            <select id="aiModel" style="flex:1"><option value="">— select a model —</option></select>
+            <button class="secondary icon" id="aiRefreshModelsBtn" title="Fetch available models from provider"><i class="codicon codicon-refresh"></i></button>
+          </div>
+          <label>System prompt <span style="font-weight:normal;opacity:.7">(edit freely)</span></label>
+          <textarea id="aiSystemPrompt" rows="4" style="width:100%;font-size:11px;font-family:monospace;resize:vertical"></textarea>
+          <button class="secondary" id="aiResetPromptBtn" style="font-size:11px;margin-top:4px">Reset to default</button>
+          <div class="hint">The field is pre-filled with a carefully crafted default. Edit it to customize the AI's behavior.</div>
+          <label style="margin-top:8px">Temperature</label>
+          <div class="row" style="align-items:center">
+            <input type="range" id="aiTemperature" min="0" max="100" value="30" style="flex:1"/>
+            <span id="aiTemperatureLabel" style="min-width:32px;text-align:center;font-size:11px">0.30</span>
+          </div>
+          <div class="inline" style="margin-top:8px">
+            <button id="aiConfigureKeyBtn" class="secondary" style="font-size:11px"><i class="codicon codicon-key"></i> Configure key</button>
+            <button id="aiTestKeyBtn" class="secondary" style="font-size:11px"><i class="codicon codicon-check"></i> Test key</button>
+          </div>
+          <div id="aiKeyStatus" class="hint" style="margin-top:4px"></div>
+          <div class="ai-progress" id="aiProgress"><div class="ai-progress-bar"></div></div>
+          <div class="inline" style="margin-top:8px">
+            <button id="aiPolishNowBtn" class="secondary"><i class="codicon codicon-wand"></i> Polish now</button>
+            <span id="aiStatus" style="font-size:11px;opacity:.8"></span>
+          </div>
+          <div id="aiDiffPanel" style="display:none">
+            <div class="diff-header">
+              <span>AI Polish Changes</span>
+              <span id="aiDiffStats" style="font-weight:normal;font-size:11px;opacity:.7"></span>
+            </div>
+            <div class="diff-body" id="aiDiffBody"></div>
+            <div class="diff-actions">
+              <button id="aiApplyBtn" class="secondary"><i class="codicon codicon-check"></i> Apply</button>
+              <button id="aiDiscardBtn" class="secondary"><i class="codicon codicon-close"></i> Discard</button>
+            </div>
+          </div>
+          <div class="hint">Your API key is stored securely in VS Code — never in profiles, settings, or logs.</div>
+        </div>
+      </fieldset>
       <div class="hint">Tip: "Save" stores the profile in <code>.markready/profiles</code> so your whole team exports with the same look (commit it to git).</div>
     </div>
     <div class="splitter" id="splitter"></div>
@@ -558,6 +736,7 @@ export class StudioPanel {
   </datalist>
 
 <script nonce="${nonce}">
+  try {
   const vscode = acquireVsCodeApi();
   let suppress = false;
   const SWATCHES = ["#1a3d7c","#0f766e","#374151","#111111","#b91c1c","#7c3aed","#c2410c","#047857"];
@@ -593,6 +772,13 @@ export class StudioPanel {
         toc: $("tocEnabled").checked, tocDepth: parseInt($("tocDepth").value,10) || 3,
         headingNumbers: $("headingNumbers").checked, codeTheme: $("codeTheme").value,
         math: $("math").checked, watermark: $("watermark").value,
+        aiPolish: {
+          enabled: $("aiPolishEnabled").checked,
+          provider: $("aiProvider").value,
+          model: $("aiModel").value,
+          systemPrompt: $("aiSystemPrompt").value,
+          temperature: (parseInt($("aiTemperature").value) || 30) / 100,
+        },
       },
     };
   }
@@ -634,6 +820,15 @@ export class StudioPanel {
     $("codeTheme").value = o.codeTheme || "github";
     $("math").checked = !!o.math;
     $("watermark").value = o.watermark || "";
+    const ai = o.aiPolish || {};
+    $("aiPolishEnabled").checked = !!ai.enabled;
+    $("aiPolishSettings").style.display = ai.enabled ? "block" : "none";
+    $("aiProvider").value = ai.provider || "openai";
+    if (ai.model) $("aiModel").value = ai.model;
+    $("aiSystemPrompt").value = ai.systemPrompt || "";
+    const t = ai.temperature != null ? Math.round(ai.temperature * 100) : 30;
+    $("aiTemperature").value = Math.max(0, Math.min(100, t));
+    $("aiTemperatureLabel").textContent = (parseInt($("aiTemperature").value) / 100).toFixed(2);
     suppress = false;
     validate();
   }
@@ -668,14 +863,13 @@ export class StudioPanel {
 
   ids.forEach((id) => {
     const el = $(id);
-    el.addEventListener("input", pushChange);
-    el.addEventListener("change", pushChange);
+    if (el) { el.addEventListener("input", pushChange); el.addEventListener("change", pushChange); }
   });
-  cleanupIds.forEach((k) => $("cl_"+k).addEventListener("change", () =>
-    vscode.postMessage({ type: "cleanup", cleanup: readCleanup() })));
+  cleanupIds.forEach((k) => { const el = $("cl_"+k); if (el) el.addEventListener("change", () =>
+    vscode.postMessage({ type: "cleanup", cleanup: readCleanup() })); });
 
-  $("primaryColorPick").addEventListener("input", (e) => { $("primaryColor").value = e.target.value; pushChange(); });
-  $("textColorPick").addEventListener("input", (e) => { $("textColor").value = e.target.value; pushChange(); });
+  const ppc = $("primaryColorPick"); if (ppc) ppc.addEventListener("input", (e) => { if ($("primaryColor")) $("primaryColor").value = e.target.value; pushChange(); });
+  const tcp = $("textColorPick"); if (tcp) tcp.addEventListener("input", (e) => { if ($("textColor")) $("textColor").value = e.target.value; pushChange(); });
 
   // Color swatches
   document.querySelectorAll(".swatches").forEach((row) => {
@@ -686,6 +880,178 @@ export class StudioPanel {
       b.addEventListener("click", () => { $(target).value = c; $(target+"Pick").value = toHex(c); pushChange(); });
       row.appendChild(b);
     });
+  });
+
+  // ---- AI Tone Polish ----
+  let aiModelsCache = {};
+  let aiPolishedText = null;
+  const aiEn = $("aiPolishEnabled"); if (aiEn) aiEn.addEventListener("change", () => {
+    const aiEn2 = $("aiPolishEnabled"), aiSet = $("aiPolishSettings");
+    if (aiEn2 && aiSet) aiSet.style.display = aiEn2.checked ? "block" : "none";
+    pushChange();
+  });
+  const aiProv = $("aiProvider"); if (aiProv) aiProv.addEventListener("change", () => {
+    const m = $("aiModel");
+    if (m) m.innerHTML = '<option value="">— select a model —</option>';
+    pushChange();
+  });
+  const aiMod = $("aiModel"); if (aiMod) aiMod.addEventListener("change", pushChange);
+  const aiSys = $("aiSystemPrompt"); if (aiSys) aiSys.addEventListener("input", pushChange);
+  const aiTemp = $("aiTemperature"); if (aiTemp) aiTemp.addEventListener("input", (e) => {
+    const lbl = $("aiTemperatureLabel");
+    if (lbl) lbl.textContent = (parseInt(e.target.value) / 100).toFixed(2);
+    pushChange();
+  });
+  const aiRef = $("aiRefreshModelsBtn"); if (aiRef) aiRef.addEventListener("click", () => {
+    const p = $("aiProvider"), b = $("aiRefreshModelsBtn");
+    vscode.postMessage({ type: "fetchAiModels", provider: p ? p.value : "openai" });
+    if (b) { b.disabled = true; b.innerHTML = '<i class="codicon codicon-loading"></i>'; }
+  });
+  const aiCfg = $("aiConfigureKeyBtn"); if (aiCfg) aiCfg.addEventListener("click", () => {
+    vscode.postMessage({ type: "configureAi" });
+  });
+  const aiTst = $("aiTestKeyBtn"); if (aiTst) aiTst.addEventListener("click", () => {
+    const p = $("aiProvider"), s = $("aiKeyStatus");
+    vscode.postMessage({ type: "testAiKey", provider: p ? p.value : "openai" });
+    if (s) s.textContent = "Testing key…";
+  });
+
+  // The default prompt text (captured from init message), used for reset
+  let defaultSystemPrompt = "";
+
+  // Polish button — animation + state machine
+  function setPolishState(state) {
+    const btn = $("aiPolishNowBtn");
+    const progress = $("aiProgress");
+    if (!btn || !progress) return;
+    btn.classList.remove("ai-spinning");
+    btn.disabled = false;
+    progress.classList.remove("active");
+    if (state === "polishing") {
+      btn.classList.add("ai-spinning");
+      btn.disabled = true;
+      progress.classList.add("active");
+      const dp = $("aiDiffPanel"); if (dp) dp.style.display = "none";
+    } else if (state === "idle") {
+      btn.innerHTML = '<i class="codicon codicon-wand"></i> Polish now';
+    }
+  }
+
+  const aiNow = $("aiPolishNowBtn"); if (aiNow) aiNow.addEventListener("click", () => {
+    vscode.postMessage({ type: "polishNow", profile: readForm() });
+    setPolishState("polishing");
+    const s = $("aiStatus");
+    if (s) { s.textContent = "Polishing"; s.className = "ai-dots"; }
+  });
+
+  const aiRst = $("aiResetPromptBtn"); if (aiRst) aiRst.addEventListener("click", () => {
+    const sp = $("aiSystemPrompt");
+    if (sp) sp.value = defaultSystemPrompt || "";
+    pushChange();
+  });
+
+  // Diff rendering
+  function renderDiff(diffLines) {
+    const body = $("aiDiffBody");
+    if (!body) return;
+    body.innerHTML = "";
+    diffLines.forEach((line) => {
+      const div = document.createElement("div");
+      div.className = "diff-line" + (line.type !== "unchanged" ? " " + line.type : "");
+      const ln = document.createElement("span");
+      ln.className = "diff-ln";
+      ln.textContent = line.type === "added" ? (line.lineNumberNew || "") : line.type === "removed" ? (line.lineNumberOld || "") : (line.lineNumberOld || "");
+      div.appendChild(ln);
+      const marker = document.createElement("span");
+      marker.className = "diff-marker" + (line.type !== "unchanged" ? " " + line.type : "");
+      marker.textContent = line.type === "added" ? "+" : line.type === "removed" ? "−" : " ";
+      div.appendChild(marker);
+      const text = document.createElement("span");
+      text.className = "diff-text";
+      text.textContent = line.value.replace(/\\n$/, "");
+      div.appendChild(text);
+      body.appendChild(div);
+    });
+  }
+
+  // Apply / Discard
+  const aiApply = $("aiApplyBtn"); if (aiApply) aiApply.addEventListener("click", () => {
+    if (aiPolishedText) {
+      vscode.postMessage({ type: "applyAiPolish", polished: aiPolishedText });
+      const dp = $("aiDiffPanel"), s = $("aiStatus");
+      if (dp) dp.style.display = "none";
+      if (s) { s.textContent = "AI polish applied"; s.className = ""; }
+      aiPolishedText = null;
+    }
+  });
+  const aiDiscard = $("aiDiscardBtn"); if (aiDiscard) aiDiscard.addEventListener("click", () => {
+    const dp = $("aiDiffPanel"), s = $("aiStatus");
+    if (dp) dp.style.display = "none";
+    if (s) { s.textContent = "AI polish discarded"; s.className = ""; }
+    aiPolishedText = null;
+  });
+
+  // AI message handlers (from extension)
+  window.addEventListener("message", (event) => {
+    const m = event.data;
+    if (m.type === "init") {
+      if (m.defaultPrompt) defaultSystemPrompt = m.defaultPrompt;
+    } else if (m.type === "aiModels") {
+      $("aiRefreshModelsBtn").disabled = false;
+      $("aiRefreshModelsBtn").innerHTML = '<i class="codicon codicon-refresh"></i>';
+      if (m.error) {
+        $("aiKeyStatus").textContent = "Error: " + m.error;
+        return;
+      }
+      aiModelsCache[m.provider] = m.models || [];
+      const sel = $("aiModel");
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— select a model —</option>';
+      (m.models || []).forEach((mod) => {
+        const opt = document.createElement("option");
+        opt.value = mod.id;
+        opt.textContent = mod.label + " (" + (mod.contextWindow?.toLocaleString() || "?") + " ctx)";
+        sel.appendChild(opt);
+      });
+      if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+      $("aiKeyStatus").textContent = m.models.length + " models loaded";
+    } else if (m.type === "aiKeyTestResult") {
+      $("aiKeyStatus").textContent = m.valid ? "Key valid — " + m.message : "Key invalid: " + m.message;
+      if (m.models && m.models.length) {
+        aiModelsCache[m.provider] = m.models;
+        const sel = $("aiModel");
+        const cur = sel.value;
+        sel.innerHTML = '<option value="">— select a model —</option>';
+        m.models.forEach((mod) => {
+          const opt = document.createElement("option");
+          opt.value = mod.id;
+          opt.textContent = mod.label + " (" + (mod.contextWindow?.toLocaleString() || "?") + " ctx)";
+          sel.appendChild(opt);
+        });
+        if (cur && [...sel.options].some(o => o.value === cur)) sel.value = cur;
+      }
+    } else if (m.type === "aiPolishResult") {
+      setPolishState("idle");
+      $("aiStatus").textContent = m.stats || "";
+      $("aiStatus").className = "";
+      if (m.diff && m.diff.length) {
+        const hasChanges = m.diff.some(l => l.type !== "unchanged");
+        if (hasChanges) {
+          aiPolishedText = m.polished;
+          renderDiff(m.diff);
+          $("aiDiffStats").textContent = m.stats || "";
+          $("aiDiffPanel").style.display = "block";
+        } else {
+          $("aiStatus").textContent = "No changes — text is already polished";
+          aiPolishedText = null;
+        }
+      } else {
+        $("aiStatus").textContent = "AI returned unexpected output";
+      }
+    } else if (m.type === "aiStatus") {
+      $("aiStatus").textContent = m.status || "";
+      $("aiStatus").className = "";
+    }
   });
 
   // Date picker -> formatted text (timezone-safe)
@@ -938,6 +1304,10 @@ export class StudioPanel {
   applySidebar();
   $("zoomLabel").textContent = Math.round(ui.zoom*100) + "%";
   vscode.postMessage({ type: "ready" });
+} catch (e) {
+  console.error("[MarkReady] Script error:", e);
+  try { vscode.postMessage({ type: "scriptError", error: String(e) }); } catch (_) {}
+}
 </script>
 </body>
 </html>`;

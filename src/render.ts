@@ -101,6 +101,11 @@ export interface BuildOptions {
   includeCover?: boolean;
   /** A small footer note shown only in the on-screen preview (not exported). */
   previewNote?: string;
+  /**
+   * Optional async AI polish step. Called with cleaned markdown; must handle
+   * its own errors and return the original on failure.
+   */
+  polishMarkdown?: (md: string) => Promise<string>;
 }
 
 export function escapeHtml(s: string): string {
@@ -282,15 +287,18 @@ function frontMatter(markdown: string): { data: Record<string, string>; content:
   }
 }
 
-/** Shared body render: front matter -> cleanup -> markdown-it -> images/TOC/numbering. */
-function renderBody(opts: BuildOptions): { body: string; entries: TocEntry[]; ctx: RenderContext } {
+/** Shared body render: front matter -> cleanup -> [AI polish] -> markdown-it -> images/TOC/numbering. */
+async function renderBody(opts: BuildOptions): Promise<{ body: string; entries: TocEntry[]; ctx: RenderContext }> {
   const cleanup = opts.cleanup ?? DEFAULT_CLEANUP;
   const fm = frontMatter(opts.markdown);
   const ctx: RenderContext = { ...opts.ctx, front: { ...(opts.ctx.front || {}), ...fm.data } };
-  const cleaned = cleanMarkdown(fm.content, cleanup);
+  let content = cleanMarkdown(fm.content, cleanup);
+  if (opts.polishMarkdown) {
+    content = await opts.polishMarkdown(content);
+  }
   const o = opts.profile.options || ({} as DocProfile["options"]);
   const inst = getMd(!!o.math);
-  let body = embedLocalImages(inst.render(cleaned), ctx.baseDir);
+  let body = embedLocalImages(inst.render(content), ctx.baseDir);
   let entries: TocEntry[] = [];
   if (o.toc || o.headingNumbers) {
     const r = addAnchorsAndToc(body, {
@@ -418,8 +426,8 @@ export function coverHtml(p: DocProfile, ctx: RenderContext): string {
 }
 
 /** Build a complete, self-contained HTML document (used for preview and all exporters). */
-export function buildHtml(opts: BuildOptions): string {
-  const { body, entries, ctx } = renderBody(opts);
+export async function buildHtml(opts: BuildOptions): Promise<string> {
+  const { body, entries, ctx } = await renderBody(opts);
   const p = opts.profile;
   const o = p.options || ({} as DocProfile["options"]);
   const toc = o.toc ? tocHtmlFrom(entries) : "";
@@ -498,8 +506,8 @@ ${previewNote}
 }
 
 /** HTML for DOCX conversion — html-to-docx ignores most positioning CSS, so keep it simple. */
-export function buildDocxHtml(opts: BuildOptions): string {
-  const { body, entries, ctx } = renderBody(opts);
+export async function buildDocxHtml(opts: BuildOptions): Promise<string> {
+  const { body, entries, ctx } = await renderBody(opts);
   const p = opts.profile;
   const o = p.options || ({} as DocProfile["options"]);
 

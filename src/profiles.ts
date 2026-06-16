@@ -40,6 +40,13 @@ export interface DocProfile {
     codeTheme?: string; // highlight.js theme name (e.g. "github", "github-dark")
     math?: boolean; // render $...$ / $$...$$ math with KaTeX
     watermark?: string; // optional diagonal watermark text on every page
+    aiPolish?: {
+      enabled: boolean;
+      provider: "openai" | "claude" | "gemini" | "openrouter";
+      model: string;
+      systemPrompt: string;
+      temperature: number;
+    };
   };
 }
 
@@ -169,6 +176,15 @@ export function normalizeProfile(raw: any): DocProfile {
       watermark: "",
       ...base.options,
       ...(raw.options || {}),
+      aiPolish: {
+        enabled: false,
+        provider: "openai",
+        model: "gpt-4o-mini",
+        systemPrompt: "",
+        temperature: 0.3,
+        ...(base.options?.aiPolish || {}),
+        ...(((raw.options || {}).aiPolish || {})),
+      },
     },
   };
 }
