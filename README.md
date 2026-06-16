@@ -13,16 +13,13 @@
 
 <p align="center">
   <a href="https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word">
-    <img src="https://img.shields.io/badge/VS%20Code%20Marketplace-v1.2.3-007ACC?style=flat-square&logo=visualstudiocode&logoColor=white" alt="Marketplace">
+    <img src="https://img.shields.io/visual-studio-marketplace/v/AnandSundaramoorthySa.markdown-to-pdf-word?style=flat-square&logo=visualstudiocode&label=Marketplace&color=007ACC" alt="Marketplace">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word">
     <img src="https://img.shields.io/visual-studio-marketplace/i/AnandSundaramoorthySa.markdown-to-pdf-word?style=flat-square&label=Installs&color=4c1" alt="Installs">
   </a>
   <a href="https://marketplace.visualstudio.com/items?itemName=AnandSundaramoorthySa.markdown-to-pdf-word">
     <img src="https://img.shields.io/visual-studio-marketplace/d/AnandSundaramoorthySa.markdown-to-pdf-word?style=flat-square&label=Downloads&color=4c1" alt="Downloads">
-  </a>
-  <a href="https://github.com/anandsundaramoorthysa/markdown-to-pdf-word/stargazers">
-    <img src="https://img.shields.io/github/stars/anandsundaramoorthysa/markdown-to-pdf-word?style=flat-square&label=Stars&color=ff69b4" alt="Stars">
   </a>
   <a href="#">
     <img src="https://img.shields.io/github/actions/workflow/status/anandsundaramoorthysa/markdown-to-pdf-word/ci.yml?style=flat-square&label=CI&color=007ACC" alt="CI">
@@ -33,14 +30,6 @@
   <a href="CONTRIBUTING.md">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome">
   </a>
-</p>
-
-<p align="center">
-  <b>Supported AI Providers</b><br>
-  <a href="#-ai-tone-polish"><img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"></a>
-  <a href="#-ai-tone-polish"><img src="https://img.shields.io/badge/Claude-FF6600?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude"></a>
-  <a href="#-ai-tone-polish"><img src="https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini"></a>
-  <a href="#-ai-tone-polish"><img src="https://img.shields.io/badge/OpenRouter-84309C?style=for-the-badge&logo=openrouter&logoColor=white" alt="OpenRouter"></a>
 </p>
 
 ---
@@ -175,6 +164,13 @@ Original Markdown  →  [Your chosen LLM]  →  Diff Review  →  Apply / Discar
 5. During export with AI enabled, polish is applied seamlessly
 
 ### Supported Providers
+
+<p align="center">
+  <a href="#ai-tone-polish"><img src="https://img.shields.io/badge/OpenAI-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI"></a>
+  <a href="#ai-tone-polish"><img src="https://img.shields.io/badge/Claude-FF6600?style=for-the-badge&logo=anthropic&logoColor=white" alt="Claude"></a>
+  <a href="#ai-tone-polish"><img src="https://img.shields.io/badge/Gemini-4285F4?style=for-the-badge&logo=googlegemini&logoColor=white" alt="Gemini"></a>
+  <a href="#ai-tone-polish"><img src="https://img.shields.io/badge/OpenRouter-84309C?style=for-the-badge&logo=openrouter&logoColor=white" alt="OpenRouter"></a>
+</p>
 
 | Provider | API Format | Default Model | Authentication |
 |---|---|---|---|

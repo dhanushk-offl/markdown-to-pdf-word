@@ -56,25 +56,50 @@ npm run compile
 ### Quick Start
 
 ```bash
-npm run compile     # TypeScript compilation
-npm run watch       # Watch mode (recompiles on save)
-npm test            # Run unit tests
+npm run compile        # TypeScript compilation
+npm run watch          # Watch mode (recompiles on save)
+npm test               # Run unit tests
+npm run bundle         # Optional esbuild bundle for production
 ```
+
+### Useful Commands
+
+| Command | Description |
+|---|---|
+| `npm run compile` | One-shot TypeScript compilation |
+| `npm run watch` | Watch mode — recompiles on every save |
+| `npm test` | Run all unit tests (Vitest) |
+| `npx vitest --coverage` | Run tests with coverage report |
+| `npx vitest test/cleanup.test.ts` | Run a single test file |
+| `npm run bundle` | Production bundle via esbuild |
+| `npx vsce package` | Package extension into `.vsix` |
+| `npx vsce publish` | Publish to VS Code Marketplace |
 
 ### Running the Extension
 
-1. Open the project in VS Code
-2. Press `F5` to launch the **Extension Development Host**
-3. A new VS Code window opens with the extension loaded
-4. Open a `.md` file and run the **Open Customization Studio** command
+```bash
+# 1. Open project in VS Code
+code .
+
+# 2. Launch Extension Development Host (F5)
+#    A new window opens with the extension loaded
+
+# 3. Open a .md file and run:
+#    Ctrl+Shift+P → "Open Customization Studio"
+```
+
+> **Tip:** Use `Cmd+R` / `Ctrl+R` in the dev host to reload after recompiling.
 
 ### Testing PDF Exports
 
-PDF export requires a Chromium-based browser on your system. The extension auto-detects:
+PDF export requires a Chromium-based browser on your system. The extension auto-detects
+these browsers:
 
-- **Windows:** Chrome, Edge, Brave, Chromium (standard install paths + `App Paths` registry)
-- **macOS:** Chrome, Edge, Brave, Chromium, Arc (`/Applications` + `~/Applications`)
-- **Linux:** Chrome, Edge, Chromium, Brave (standard paths + `PATH` lookup)
+| OS | Detected Browsers |
+|---|---|
+| Windows | Chrome, Edge, Brave, Chromium |
+| macOS | Chrome, Edge, Brave, Chromium, Arc |
+| Linux | Chrome, Edge, Chromium, Brave |
 
 If auto-detection fails, set the path explicitly:
 
@@ -90,18 +115,26 @@ export CHROME_PATH=/path/to/chrome
 
 The Customization Studio runs in a VS Code webview. To debug it:
 
-1. Open the studio panel
-2. Run **Developer: Toggle Developer Tools** from the Command Palette
-3. Use the **Console** and **Elements** tabs to inspect the webview
+```bash
+# 1. Open the studio panel
+# 2. Run → "Developer: Toggle Developer Tools"
+# 3. Use Console + Elements tabs to inspect
+```
 
-The inline script is wrapped in `try { ... } catch` — errors are logged to the console
-with the prefix `[MarkReady]`.
+The inline script is wrapped in `try { ... } catch` — errors are logged with the
+prefix `[MarkReady]`.
 
 ### Debugging AI Polish
 
-1. Set `"markready.ai.debug": true` in VS Code settings (trace-level logging)
-2. Use **Developer: Toggle Developer Tools** to watch network requests
-3. AI API keys are stored in secret storage — never in files or logs
+```bash
+# 1. Enable trace logging in VS Code settings:
+#    "markready.ai.debug": true
+
+# 2. Open Developer Tools to watch network requests
+
+# 3. API keys are stored in VS Code secret storage —
+#    never in profiles, settings, logs, or files
+```
 
 ---
 
