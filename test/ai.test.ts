@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   PROVIDER_META,
   AiClientError,
@@ -6,6 +6,7 @@ import {
   AiPolishConfig,
 } from "../src/ai/types";
 import { DEFAULT_SYSTEM_PROMPT } from "../src/ai/prompts";
+import { validateKey } from "../src/ai/client";
 
 describe("AI types", () => {
   it("all providers have metadata", () => {
@@ -161,5 +162,35 @@ describe("polishMarkdown graceful degradation", () => {
       temperature: 0.3,
     }, async () => "sk-test");
     expect(result).toBe("");
+  });
+});
+
+describe("validateKey rejects invalid keys (mocked HTTP)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("Claude: 401 must NOT report the key as valid (regression: fallback models hid the error)", async () => {
+    vi.stubGlobal("fetch", async () => new Response(JSON.stringify({ error: "unauthorized" }), { status: 401 }));
+    const r = await validateKey("claude", "bad-key");
+    expect(r.valid).toBe(false);
+  });
+
+  it("Gemini: 400 'API key not valid' is treated as an invalid key", async () => {
+    vi.stubGlobal("fetch", async () =>
+      new Response(JSON.stringify({ error: { code: 400, message: "API key not valid. Please pass a valid API key." } }), { status: 400 }));
+    const r = await validateKey("gemini", "bad-key");
+    expect(r.valid).toBe(false);
+  });
+
+  it("OpenAI: 401 is surfaced as an invalid_key error", async () => {
+    vi.stubGlobal("fetch", async () => new Response("{}", { status: 401 }));
+    await expect(validateKey("openai", "bad-key")).rejects.toMatchObject({ code: "invalid_key" });
+  });
+
+  it("Claude: a valid models response reports the key as valid", async () => {
+    vi.stubGlobal("fetch", async () =>
+      new Response(JSON.stringify({ data: [{ id: "claude-3-5-haiku-latest", display_name: "Haiku" }] }), { status: 200 }));
+    const r = await validateKey("claude", "good-key");
+    expect(r.valid).toBe(true);
+    expect(r.models && r.models.length).toBeGreaterThan(0);
   });
 });

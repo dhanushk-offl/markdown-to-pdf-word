@@ -28,6 +28,10 @@ export abstract class BaseProvider {
         if (res.status === 401) throw new AiClientError("Invalid API key", "invalid_key", this.providerId);
         if (res.status === 429) throw new AiClientError("Rate limited", "rate_limited", this.providerId);
         if (res.status === 404) throw new AiClientError(`Model or endpoint not found: ${body.slice(0, 200)}`, "bad_response", this.providerId);
+        // Google (Gemini) returns 400/403 with an "API key not valid" message rather than 401.
+        if ((res.status === 400 || res.status === 403) && /api[\s_-]?key/i.test(body) && /(invalid|not valid|expired)/i.test(body)) {
+          throw new AiClientError("Invalid API key", "invalid_key", this.providerId);
+        }
         throw new AiClientError(`HTTP ${res.status}: ${body.slice(0, 200)}`, "bad_response", this.providerId);
       }
       return await res.json();

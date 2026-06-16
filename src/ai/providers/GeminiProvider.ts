@@ -1,5 +1,5 @@
 import { BaseProvider } from "./BaseProvider";
-import { AiModelInfo, AiProviderId, KeyValidationResult, PROVIDER_META } from "../types";
+import { AiClientError, AiModelInfo, AiProviderId, KeyValidationResult, PROVIDER_META } from "../types";
 
 export class GeminiProvider extends BaseProvider {
   protected get providerId(): AiProviderId {
@@ -45,11 +45,18 @@ export class GeminiProvider extends BaseProvider {
   }
 
   async validateKey(): Promise<KeyValidationResult> {
-    const models = await this.listModels();
-    return {
-      valid: true,
-      message: `Gemini key valid — ${models.length} models`,
-      models,
-    };
+    try {
+      const models = await this.listModels();
+      return {
+        valid: true,
+        message: `Gemini key valid — ${models.length} models`,
+        models,
+      };
+    } catch (err) {
+      if (err instanceof AiClientError && err.code === "invalid_key") {
+        return { valid: false, message: "Invalid API key" };
+      }
+      throw err;
+    }
   }
 }

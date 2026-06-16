@@ -28,6 +28,14 @@
   branded shields.io badges, star-history graph, improved layout, and clearer navigation
 - **Preview zoom reliability fix:** zooming in/out no longer clips the page
 
+### 🔑 AI key validation fixes
+- **Claude:** an invalid/expired Anthropic key is now correctly reported as invalid. Previously
+  `validateKey` leaned on `listModels`, which fell back to a hardcoded model list on a 401 and
+  reported *any* key as valid.
+- **Gemini:** a bad key (which Google returns as HTTP 400 "API key not valid") now shows a clean
+  "Invalid API key" message instead of a raw HTTP error dump.
+- Added regression tests (mocked HTTP) covering invalid-key handling for all providers.
+
 ## 1.2.3
 
 - **Preview zoom no longer clips the page**: zooming in or out used CSS `zoom` on the preview

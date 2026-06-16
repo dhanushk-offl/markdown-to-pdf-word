@@ -97,6 +97,9 @@ live preview by running the same `render.ts` path used for export -> true WYSIWY
   transform-based zoom (no clipping); profile manager; inline cleanup toggles; code
   highlighting, KaTeX math, task lists, footnotes, front matter; TOC depth + heading
   numbering; watermark; embedded images; tests + CI.
+- **v1.3.0 (shipped)** — optional AI tone-polish (Tier 2, bring-your-own-key): OpenAI,
+  Claude, Gemini, OpenRouter; keys in VS Code secret storage; inline diff review;
+  model browser; per-profile config; polish-on-export — plus key-validation fixes.
 
 ## 8. How to run
 
