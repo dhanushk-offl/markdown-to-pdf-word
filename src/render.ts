@@ -108,12 +108,21 @@ export interface BuildOptions {
   polishMarkdown?: (md: string) => Promise<string>;
 }
 
+/** XML-safe escape. Handles HTML entities AND strips/replaces characters that
+ * are invalid in XML 1.0 (control chars, unpaired surrogates, BOM, non-characters)
+ * so that downstream DOCX generation never receives malformed input. */
 export function escapeHtml(s: string): string {
   return (s || "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;")
+    // Strip control characters U+0000–U+001F except tab(0x09), LF(0x0A), CR(0x0D)
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "")
+    // Strip surrogate blocks U+D800-U+DFFF (invalid in XML 1.0 Char production)
+    .replace(/[\uD800-\uDFFF]/g, "")
+    .replace(/[\uFEFF\uFFFE\uFFFF]/g, "");
 }
 
 export function resolvePlaceholders(s: string, ctx: RenderContext, p: DocProfile): string {
@@ -543,11 +552,11 @@ export async function buildDocxHtml(opts: BuildOptions): Promise<string> {
   }
   return `<!doctype html><html><head><meta charset="utf-8"/>
   <style>
-    body { font-family: ${p.branding.fontBody}; color: ${p.branding.textColor}; font-size: ${p.branding.fontSize}; }
-    h1,h2,h3,h4 { color: ${p.branding.primaryColor}; }
+    body { font-family: ${escapeHtml(p.branding.fontBody)}; color: ${escapeHtml(p.branding.textColor)}; font-size: ${escapeHtml(p.branding.fontSize)}; }
+    h1,h2,h3,h4 { color: ${escapeHtml(p.branding.primaryColor)}; }
     table { border-collapse: collapse; }
     th,td { border: 1px solid #999; padding: 4px 8px; }
-    th { background: ${p.branding.primaryColor}; color: #fff; }
+    th { background: ${escapeHtml(p.branding.primaryColor)}; color: #fff; }
     code, pre { font-family: Consolas, monospace; background: #f3f4f6; }
   </style></head>
   <body>${cover}${toc}${body}</body></html>`;

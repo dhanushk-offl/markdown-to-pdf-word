@@ -47,6 +47,20 @@ export async function listModels(
   return p.listModels();
 }
 
+/**
+ * Strip common AI wrapping artifacts from the response before it enters the
+ * markdown / DOCX pipeline.  Many models wrap output in ```markdown fences
+ * despite being told not to; those fences, when rendered through markdown-it
+ * and then decoded by html-to-docx, produce raw <>/<> in the DOCX XML and
+ * corrupt the file.
+ */
+export function sanitizeAiOutput(s: string): string {
+  return (s || "")
+    .replace(/^\s*```(?:\w+)?\s*\n?/i, "")
+    .replace(/\n?```\s*$/i, "")
+    .trim();
+}
+
 export async function polishMarkdown(
   markdown: string,
   config: AiPolishConfig,
@@ -72,7 +86,7 @@ export async function polishMarkdown(
       return markdown;
     }
     onStatus?.("AI polish complete");
-    return result;
+    return sanitizeAiOutput(result);
   } catch (err) {
     const msg = err instanceof AiClientError ? err.message : "Unknown error";
     onStatus?.("AI polish failed: " + msg);
