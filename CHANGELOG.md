@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.3.1
+
+- **DOCX corruption fix (issue #4):** when AI polish was enabled, some LLMs wrapped their
+  responses in ` ```markdown ` fences. Those fences flowed through markdown-it and were
+  decoded by html-to-docx into raw `<` `>` characters in `word/document.xml`, causing
+  Word to reject the file with *"line 0 column 0"*. The AI response is now sanitized
+  (leading/trailing code fences stripped), `escapeHtml` also strips XML-invalid characters
+  (control chars, unpaired surrogates, BOM), and header/footer/profile values are escaped
+  before entering the DOCX pipeline. Thanks to @dhanushk-offl for the fix (PR #5).
+- Added 12 new tests covering the sanitizer and XML-safe escapeHtml (45 tests total, all pass).
+
 ## 1.3.0
 
 ### 🎉 AI Tone Polish

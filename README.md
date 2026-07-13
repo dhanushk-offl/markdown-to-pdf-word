@@ -236,7 +236,7 @@ code --install-extension AnandSundaramoorthySa.markdown-to-pdf-word
 Download the `.vsix` from the [Releases](https://github.com/anandsundaramoorthysa/markdown-to-pdf-word/releases) page, then:
 
 ```bash
-code --install-extension markdown-to-pdf-word-1.3.0.vsix
+code --install-extension markdown-to-pdf-word-1.3.1.vsix
 ```
 
 > **PDF requirement:** PDF export renders through an installed **Google Chrome**, **Microsoft

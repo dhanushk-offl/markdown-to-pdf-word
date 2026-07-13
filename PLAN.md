@@ -100,6 +100,8 @@ live preview by running the same `render.ts` path used for export -> true WYSIWY
 - **v1.3.0 (shipped)** — optional AI tone-polish (Tier 2, bring-your-own-key): OpenAI,
   Claude, Gemini, OpenRouter; keys in VS Code secret storage; inline diff review;
   model browser; per-profile config; polish-on-export — plus key-validation fixes.
+- **v1.3.1 (shipped)** — DOCX corruption fix (issue #4): AI output sanitizer strips
+  wrapping code fences, escapeHtml is XML-safe, DOCX header/footer/profile values escaped.
 
 ## 8. How to run
 
