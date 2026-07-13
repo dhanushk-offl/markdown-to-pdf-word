@@ -165,6 +165,33 @@ describe("polishMarkdown graceful degradation", () => {
   });
 });
 
+describe("sanitizeAiOutput", () => {
+  it.each([
+    ["markdown fence", "```markdown\n# Hello\n```", "# Hello"],
+    ["md fence", "```md\n# Hello\n```", "# Hello"],
+    ["html fence", "```html\n# Hello\n```", "# Hello"],
+    ["text fence", "```text\n# Hello\n```", "# Hello"],
+    ["plaintext fence", "```plaintext\n# Hello\n```", "# Hello"],
+    ["bare fence", "```\n# Hello\n```", "# Hello"],
+    ["leading whitespace", "\n\n```markdown\n# Hello\n```", "# Hello"],
+    ["no trailing fence", "```markdown\n# Hello", "# Hello"],
+    ["no fence at all", "# Hello", "# Hello"],
+    ["empty input", "", ""],
+  ])("strips %s", async (_name, input, expected) => {
+    const { sanitizeAiOutput } = await import("../src/ai/client");
+    expect(sanitizeAiOutput(input)).toBe(expected);
+  });
+
+  it("preserves embedded code fences", async () => {
+    const { sanitizeAiOutput } = await import("../src/ai/client");
+    const input = "# A\n\n```js\nconst x = 1;\n```\n\n# B\n\n```ts\nconst y = 2;\n```\n\n# End";
+    const result = sanitizeAiOutput(input);
+    expect(result).toBe(input);
+    expect(result).toContain("```js");
+    expect(result).toContain("```ts");
+  });
+});
+
 describe("validateKey rejects invalid keys (mocked HTTP)", () => {
   afterEach(() => vi.unstubAllGlobals());
 

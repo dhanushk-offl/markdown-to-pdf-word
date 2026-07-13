@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { DocProfile } from "../profiles";
+import { escapeHtml } from "../render";
 
 // html-to-docx ships no type declarations; load via require.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -23,11 +24,11 @@ export async function exportDocx(
   };
 
   const headerHtml = profile.header.show
-    ? `<p style="font-size:9px;color:#888;">${profile.header.text || ""}</p>`
+    ? `<p style="font-size:9px;color:#888;">${escapeHtml(profile.header.text)}</p>`
     : undefined;
   const footerHtml =
     profile.footer.text && !profile.footer.pageNumbers
-      ? `<p style="font-size:9px;color:#888;">${profile.footer.text}</p>`
+      ? `<p style="font-size:9px;color:#888;">${escapeHtml(profile.footer.text)}</p>`
       : undefined;
 
   const result = await HTMLtoDOCX(html, headerHtml ?? null, options, footerHtml ?? null);
